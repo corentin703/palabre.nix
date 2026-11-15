@@ -1,4 +1,4 @@
-# Minimal configuration with no real value: it only exists to lock Palabre's
+# Minimal configuration with no real value: it only exists to lock palabre.nix's
 # images from this repository (`pin-oci lock --flake .#lock`) and to check that
 # the module evaluates. Here the project has no `followLockFile`: its images are
 # those of the repository's `lockFile`, which `pin-oci lock` writes. On a host,

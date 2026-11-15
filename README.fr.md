@@ -1,4 +1,4 @@
-# Palabre
+# palabre.nix
 
 [English](README.md)
 

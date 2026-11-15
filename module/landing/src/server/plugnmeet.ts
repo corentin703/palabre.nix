@@ -15,7 +15,7 @@ export const {
   RoomEndReqSchema,
 } = sdk;
 
-/** What Palabre uses of the PlugNMeet API: something to replace it with in tests. */
+/** What palabre.nix uses of the PlugNMeet API: something to replace it with in tests. */
 export type PnmApi = Pick<
   InstanceType<typeof PlugNmeet>,
   | 'isRoomActive'

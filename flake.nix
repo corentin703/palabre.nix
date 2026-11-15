@@ -1,5 +1,5 @@
 {
-  description = "Palabre : visioconférence autohébergée (PlugNMeet + LiveKit + NATS) pour NixOS";
+  description = "palabre.nix : visioconférence autohébergée (PlugNMeet + LiveKit + NATS) pour NixOS";
 
   # Binary cache for packages.<system>.palabre-landing (pushed by CI). Mirrored in the README.
   nixConfig = {

@@ -1,4 +1,4 @@
-# Palabre: self-hosted video conferencing.
+# palabre.nix: self-hosted video conferencing.
 #
 # PlugNMeet (interface + API) on top of LiveKit (audio/video media) and NATS
 # (real time), with a customizable public landing page (anonymous room
@@ -39,7 +39,7 @@ in
   };
 
   options.services.palabre = {
-    enable = mkEnableOption "Palabre (PlugNMeet + LiveKit + NATS + landing page)";
+    enable = mkEnableOption "palabre.nix (PlugNMeet + LiveKit + NATS + landing page)";
 
     host = mkOption {
       type = types.str;
@@ -222,7 +222,7 @@ in
         default = pkgs.callPackage ./landing/package.nix { };
         defaultText = lib.literalMD "the flake's `packages.<system>.palabre-landing` (otherwise built with the host's nixpkgs)";
         description = ''
-          Package of the landing page. Through the flake it is the one Palabre's CI builds and
+          Package of the landing page. Through the flake it is the one the palabre.nix CI builds and
           pushes to its binary cache, so the host does not compile it.
         '';
       };

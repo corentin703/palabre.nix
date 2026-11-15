@@ -60,7 +60,7 @@ buildNpmPackage {
   nativeBuildInputs = [ makeWrapper ];
 
   meta = {
-    description = "Public landing page (anonymous room creation/joining) for PlugNMeet (Palabre)";
+    description = "Public landing page (anonymous room creation/joining) for PlugNMeet (palabre.nix)";
     license = lib.licenses.mit;
     mainProgram = "palabre-landing";
     platforms = lib.platforms.linux;
