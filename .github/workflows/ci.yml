@@ -23,8 +23,6 @@ jobs:
       - uses: cachix/cachix-action@v16
         with:
           name: palabre
-          # Pousse dans le cache ce que ce job construit. Sans le secret (pull request d'un fork),
-          # il ne fait que lire le cache.
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - name: Checks (formatting, module evaluation, landing page build and tests)
         run: nix flake check --print-build-logs
