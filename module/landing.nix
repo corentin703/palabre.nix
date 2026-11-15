@@ -9,7 +9,7 @@ let
   lcfg = cfg.landing;
   ociUser = cfg.user;
 
-  palabre-landing = pkgs.callPackage ./landing/package.nix { };
+  palabre-landing = lcfg.package;
 
   imageName = "palabre-landing";
   imageTag = "latest";

@@ -32,7 +32,19 @@
     in
     {
       nixosModules = {
-        palabre = ./module;
+        # La page d'accueil vient du paquet de ce flake (construit et mis en cache par la CI) :
+        # sans cela, elle serait recompilée avec le nixpkgs de l'hôte, hors du cache.
+        palabre =
+          { lib, pkgs, ... }:
+          let
+            package = self.packages.${pkgs.stdenv.hostPlatform.system} or { };
+          in
+          {
+            imports = [ ./module ];
+            services.palabre.landing.package = lib.mkIf (package ? palabre-landing) (
+              lib.mkDefault package.palabre-landing
+            );
+          };
         default = self.nixosModules.palabre;
       };
 

@@ -76,6 +76,20 @@ virtualisation.pin-oci.projects.palabre.followLockFile = null; # votre virtualis
 puis lancez `pin-oci lock`. L'hôte doit quand même activer pin-oci et définir son `lockFile`
 (`virtualisation.pin-oci.{enable,lockFile}`).
 
+## Cache binaire
+
+La CI construit la page d'accueil et la pousse dans le cache [Cachix](https://cachix.org)
+`palabre`. Via ce flake, `services.palabre.landing.package` est ce paquet : les hôtes le
+téléchargent au lieu de le compiler (un build Vite). Pour utiliser le cache :
+
+```console
+$ cachix use palabre
+```
+
+ou ajoutez `https://palabre.cachix.org` et la clé publique du cache à `nix.settings.substituters`
+et `nix.settings.trusted-public-keys`. Mainteneurs : créez le cache sur cachix.org et ajoutez son
+jeton d'authentification aux secrets du dépôt sous le nom `CACHIX_AUTH_TOKEN`.
+
 ## Langues
 
 La page d'accueil et le panneau `/admin` existent en français et en anglais. Chaque personne a la

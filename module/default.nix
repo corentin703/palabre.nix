@@ -3,7 +3,12 @@
 # PlugNMeet (interface + API) au-dessus de LiveKit (média audio/vidéo) et NATS
 # (temps réel), avec une page d'accueil publique (création/jonction de salon
 # anonyme, panneau /admin) personnalisable. Voir README.md.
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   inherit (lib) mkEnableOption mkOption types;
 in
@@ -179,6 +184,15 @@ in
     };
 
     landing = {
+      package = mkOption {
+        type = types.package;
+        default = pkgs.callPackage ./landing/package.nix { };
+        defaultText = lib.literalMD "`packages.<system>.palabre-landing` du flake (sinon construit avec le nixpkgs de l'hôte)";
+        description = ''
+          Paquet de la page d'accueil. Utilisé via le flake, c'est celui que la CI de Palabre
+          construit et met dans son cache binaire : l'hôte ne le recompile pas.
+        '';
+      };
       brandName = mkOption {
         type = types.str;
         default = "Visioconférence";

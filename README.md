@@ -75,6 +75,20 @@ virtualisation.pin-oci.projects.palabre.followLockFile = null; # your virtualisa
 then run `pin-oci lock`. The host still has to enable pin-oci and set its `lockFile`
 (`virtualisation.pin-oci.{enable,lockFile}`).
 
+## Binary cache
+
+The CI builds the landing page and pushes it to the [Cachix](https://cachix.org) cache `palabre`.
+Through this flake, `services.palabre.landing.package` is that package, so hosts download it
+instead of compiling it (a Vite build). To use the cache:
+
+```console
+$ cachix use palabre
+```
+
+or add `https://palabre.cachix.org` and the cache's public key to `nix.settings.substituters`
+and `nix.settings.trusted-public-keys`. Maintainers: create the cache on cachix.org and add its
+auth token to the repository's secrets as `CACHIX_AUTH_TOKEN`.
+
 ## Languages
 
 The landing page and the `/admin` panel exist in French and English. Each person gets the language
