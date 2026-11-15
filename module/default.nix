@@ -184,6 +184,18 @@ in
         default = "Visioconférence";
         description = "Nom affiché sur la page d'accueil, dans son titre et sur /admin.";
       };
+      defaultLocale = mkOption {
+        type = types.enum [
+          "fr"
+          "en"
+        ];
+        default = "fr";
+        description = ''
+          Langue de la page quand rien ne dit celle de la personne. Elle est d'abord celle
+          qu'elle a choisie sur la page (boutons de langue), puis celle de son navigateur si
+          elle est disponible. Langues disponibles : français et anglais.
+        '';
+      };
       themeColor = mkOption {
         type = types.str;
         default = "#1f3a5f";

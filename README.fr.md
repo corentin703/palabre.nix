@@ -49,6 +49,7 @@ services.palabre = {
 
   landing = {
     brandName = "Mon organisation";
+    defaultLocale = "fr";                 # "fr" (défaut) ou "en"
     themeColor = "#1f3a5f";
     logo = ./logo.png;
     css = builtins.readFile ./theme.css;
@@ -74,6 +75,19 @@ virtualisation.pin-oci.projects.palabre.followLockFile = null; # votre virtualis
 
 puis lancez `pin-oci lock`. L'hôte doit quand même activer pin-oci et définir son `lockFile`
 (`virtualisation.pin-oci.{enable,lockFile}`).
+
+## Langues
+
+La page d'accueil et le panneau `/admin` existent en français et en anglais. Chaque personne a la
+langue qu'elle a choisie avec les boutons en haut de la page (retenue sur son appareil), sinon la
+première langue de son navigateur qui est disponible, sinon `landing.defaultLocale`. La langue
+détermine aussi le message de bienvenue du salon et la langue de la réunion PlugNMeet.
+
+Pour ajouter une langue : ajoutez son code dans `src/shared/locales.ts`, copiez
+`src/web/i18n/en.ts` en `src/web/i18n/<code>.ts` (TypeScript vérifie qu'aucun texte ne manque),
+déclarez-la dans `src/web/i18n/index.tsx`, ajoutez son message de bienvenue dans
+`src/server/messages.ts`, et autorisez-la dans l'option `landing.defaultLocale`. Tous les chemins
+sont sous `module/landing/`.
 
 ## Personnaliser la page d'accueil
 
@@ -104,12 +118,25 @@ Le panneau `/admin` garde son style neutre ; seul le nom (`brandName`) y appara�
 $ nix develop                          # pin-oci dans le shell
 $ pin-oci lock --flake .#lock          # verrouille les images dans ./pin-oci.lock
 $ pin-oci lock update --flake .#lock   # fait avancer les tags vers leurs digests actuels
-$ nix flake check                      # le module s'évalue, formatage, build de la page d'accueil
+$ nix flake check                      # le module s'évalue, formatage, build de la page d'accueil et tests
 ```
 
 `.#lock` est une configuration d'exemple (`examples/lock`) qui ne sert qu'à verrouiller les images
-et à tester que le module s'évalue. Après une modification de `module/landing/package-lock.json`,
-mettez à jour `npmDepsHash` dans `module/landing/package.nix`.
+et à tester que le module s'évalue.
+
+La page d'accueil est un projet TypeScript dans `module/landing/` (Node 22+, npm) :
+
+```console
+$ cd module/landing
+$ npm ci
+$ npm run build       # serveur (tsc -> dist/server) et application web (vite -> dist/web)
+$ npm test            # vitest
+$ npm run typecheck
+$ npm run dev         # serveur de développement Vite ; lancez `npm start` à côté (API sur :3000)
+```
+
+Après une modification de `package-lock.json`, mettez à jour `npmDepsHash` dans
+`module/landing/package.nix` (mettez `lib.fakeHash`, construisez, copiez le hash affiché par Nix).
 
 ## Structure
 
@@ -118,7 +145,10 @@ mettez à jour `npmDepsHash` dans `module/landing/package.nix`.
 - `module/livekit.nix`, `plugnmeet.nix`, `landing.nix` : conteneurs ;
 - `module/nats.nix`, `redis.nix` : services natifs ;
 - `module/caddy.nix` : routage par chemin (`caddyHandles`) ;
-- `module/landing/` : l'application Node.js (`server.js`, `admin.js`) ;
+- `module/landing/` : la page d'accueil, en TypeScript :
+  - `src/server/` : serveur Node, API JSON uniquement (jonction, administration, fichiers) ;
+  - `src/web/` : l'application web (Vite + React) : page d'accueil, `/admin`, `i18n/` pour les textes ;
+  - `src/shared/` : ce que les deux côtés partagent (règles des noms de salon, types de l'API, langues) ;
 - `examples/lock/` : configuration d'exemple, qui sert à verrouiller les images et aux checks ;
 - `pin-oci.lock` : digests verrouillés des images.
 

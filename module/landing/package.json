@@ -2,16 +2,32 @@
   "name": "palabre-landing",
   "version": "1.0.0",
   "private": true,
-  "description": "Page d'accueil publique (creation/jonction de salon anonyme) pour PlugNMeet",
+  "description": "Page d'accueil publique (creation/jonction de salon anonyme) pour PlugNMeet (Palabre)",
   "license": "MIT",
-  "main": "server.js",
+  "main": "dist/server/main.js",
   "scripts": {
-    "start": "node server.js"
+    "dev": "vite",
+    "build": "tsc -p tsconfig.server.json && vite build",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.web.json",
+    "test": "vitest run",
+    "start": "node dist/server/main.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "plugnmeet-sdk-js": "2.2.3"
-  }
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "5.9.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  },
+  "type": "module"
 }

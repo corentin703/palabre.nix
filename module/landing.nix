@@ -59,6 +59,7 @@ in
         PLUGNMEET_SECRET=${config.sops.placeholder.palabre-plugnmeet-secret}
         ADMIN_TOKEN=${config.sops.placeholder.palabre-admin-token}
         LANDING_THEME_COLOR=${lcfg.themeColor}
+        LANDING_DEFAULT_LOCALE=${lcfg.defaultLocale}
       '';
       owner = ociUser;
       mode = "0400";

@@ -49,6 +49,7 @@ services.palabre = {
 
   landing = {
     brandName = "My organization";
+    defaultLocale = "en";                 # "fr" (default) or "en"
     themeColor = "#1f3a5f";
     logo = ./logo.png;
     css = builtins.readFile ./theme.css;
@@ -73,6 +74,18 @@ virtualisation.pin-oci.projects.palabre.followLockFile = null; # your virtualisa
 
 then run `pin-oci lock`. The host still has to enable pin-oci and set its `lockFile`
 (`virtualisation.pin-oci.{enable,lockFile}`).
+
+## Languages
+
+The landing page and the `/admin` panel exist in French and English. Each person gets the language
+they picked with the buttons at the top of the page (remembered on their device), otherwise the
+first language of their browser that is available, otherwise `landing.defaultLocale`. The
+language also sets the room's welcome message and the language of the PlugNMeet meeting.
+
+To add a language: add its code to `src/shared/locales.ts`, copy `src/web/i18n/en.ts` to
+`src/web/i18n/<code>.ts` (TypeScript checks that no text is missing), register it in
+`src/web/i18n/index.tsx`, add its welcome message in `src/server/messages.ts`, and allow it in the
+`landing.defaultLocale` option. All paths are under `module/landing/`.
 
 ## Customizing the landing page
 
@@ -103,12 +116,25 @@ The `/admin` panel keeps its neutral style; only the name (`brandName`) appears 
 $ nix develop                          # pin-oci in the shell
 $ pin-oci lock --flake .#lock          # lock the images into ./pin-oci.lock
 $ pin-oci lock update --flake .#lock   # move the tags to their current digests
-$ nix flake check                      # the module evaluates, formatting, landing page build
+$ nix flake check                      # the module evaluates, formatting, landing page build and tests
 ```
 
 `.#lock` is an example configuration (`examples/lock`) that only exists to lock the images and
-to test that the module evaluates. After changing `module/landing/package-lock.json`, update
-`npmDepsHash` in `module/landing/package.nix`.
+to test that the module evaluates.
+
+The landing page is a TypeScript project in `module/landing/` (Node 22+, npm):
+
+```console
+$ cd module/landing
+$ npm ci
+$ npm run build       # server (tsc -> dist/server) and web app (vite -> dist/web)
+$ npm test            # vitest
+$ npm run typecheck
+$ npm run dev         # Vite dev server for the web app; run `npm start` next to it (API on :3000)
+```
+
+After changing `package-lock.json`, update `npmDepsHash` in `module/landing/package.nix` (put
+`lib.fakeHash`, build, copy the hash Nix prints).
 
 ## Layout
 
@@ -117,7 +143,10 @@ to test that the module evaluates. After changing `module/landing/package-lock.j
 - `module/livekit.nix`, `plugnmeet.nix`, `landing.nix`: containers;
 - `module/nats.nix`, `redis.nix`: native services;
 - `module/caddy.nix`: path-based routing (`caddyHandles`);
-- `module/landing/`: the Node.js application (`server.js`, `admin.js`);
+- `module/landing/`: the landing page, in TypeScript:
+  - `src/server/`: Node server, JSON API only (join, admin, files);
+  - `src/web/`: the web app (Vite + React): join page, `/admin`, `i18n/` for the texts;
+  - `src/shared/`: what both sides share (room name rules, API types, languages);
 - `examples/lock/`: example configuration, used to lock the images and by the checks;
 - `pin-oci.lock`: pinned digests of the images.
 

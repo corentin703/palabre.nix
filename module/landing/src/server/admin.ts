@@ -1,0 +1,195 @@
+import * as crypto from 'node:crypto';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { ActiveRoom, PastRoom, RoomsListing } from '../shared/api.js';
+import type { Config } from './config.js';
+import { getClientIp, readJson, sendError, sendJson } from './http.js';
+import { isLocale } from '../shared/locales.js';
+import type { Locale } from '../shared/locales.js';
+import { adminName } from './messages.js';
+import { FetchPastRoomsReqSchema, RoomEndReqSchema, createJoinUrl, createRequest } from './plugnmeet.js';
+import type { PnmApi } from './plugnmeet.js';
+import { WindowCounter } from './window-counter.js';
+
+// Panneau d'administration (/admin) : liste des salles PlugNMeet et fermeture manuelle.
+// Authentification par un jeton unique (sops) échangé contre un cookie de session signé.
+
+const SESSION_MAX_AGE_S = 8 * 60 * 60;
+const COOKIE_NAME = 'admin_session';
+
+/** Anti force-brute sur le jeton : peu d'essais ratés par IP et par fenêtre. */
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_FAILURES = 5;
+
+const ROOM_ID_RE = /^[a-z0-9-]{1,64}$/;
+
+const sha256 = (value: string): Buffer => crypto.createHash('sha256').update(value).digest();
+
+function parseCookies(header: string | undefined): Record<string, string> {
+  const cookies: Record<string, string> = {};
+  for (const part of (header ?? '').split(';')) {
+    const i = part.indexOf('=');
+    if (i > 0) cookies[part.slice(0, i).trim()] = part.slice(i + 1).trim();
+  }
+  return cookies;
+}
+
+/** Les états qui changent des choses n'acceptent que du JSON, de ce même hôte (voir isSafeMutation). */
+function isSafeMutation(req: IncomingMessage): boolean {
+  if (!(req.headers['content-type'] ?? '').startsWith('application/json')) return false;
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  try {
+    return new URL(origin).host === req.headers.host;
+  } catch {
+    return false;
+  }
+}
+
+export interface AdminDeps {
+  pnm: PnmApi;
+  config: Config;
+  adminToken: string;
+}
+
+/** Retourne un gestionnaire qui répond aux routes /admin/login, /admin/logout et /admin/api/*. */
+export function createAdminHandler({ pnm, config, adminToken }: AdminDeps) {
+  const tokenDigest = sha256(adminToken);
+  const failures = new WindowCounter(LOGIN_WINDOW_MS);
+
+  const sign = (exp: string | number): string =>
+    crypto.createHmac('sha256', adminToken).update(`admin-session|${exp}`).digest('hex');
+
+  function isAuthenticated(req: IncomingMessage): boolean {
+    const [exp, signature] = (parseCookies(req.headers.cookie)[COOKIE_NAME] ?? '').split('.');
+    if (!exp || !signature || !/^[0-9]+$/.test(exp)) return false;
+    if (Number(exp) < Math.floor(Date.now() / 1000)) return false;
+    const given = Buffer.from(signature);
+    const expected = Buffer.from(sign(exp));
+    return given.length === expected.length && crypto.timingSafeEqual(given, expected);
+  }
+
+  const cookieAttributes = 'Path=/admin; HttpOnly; Secure; SameSite=Strict';
+  const sessionCookie = (): string => {
+    const exp = Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_S;
+    return `${COOKIE_NAME}=${exp}.${sign(exp)}; Max-Age=${SESSION_MAX_AGE_S}; ${cookieAttributes}`;
+  };
+  const clearedCookie = `${COOKIE_NAME}=; Max-Age=0; ${cookieAttributes}`;
+
+  /** `roomId` (et langue de la personne) du corps JSON, ou null s'il est absent ou mal formé. */
+  async function readRoomRequest(req: IncomingMessage): Promise<{ roomId: string; locale: Locale } | null> {
+    const body = (await readJson(req, 2000)) as { roomId?: unknown; locale?: unknown } | null;
+    if (typeof body?.roomId !== 'string' || !ROOM_ID_RE.test(body.roomId)) return null;
+    return { roomId: body.roomId, locale: isLocale(body.locale) ? body.locale : config.defaultLocale };
+  }
+
+  async function listRooms(): Promise<RoomsListing> {
+    // L'historique est secondaire : s'il échoue, on affiche quand même les salles ouvertes
+    // plutôt que de bloquer toute la page.
+    const [activeRes, pastRes] = await Promise.all([
+      pnm.getActiveRoomsInfo(),
+      pnm
+        .fetchPastRoomsInfo(
+          createRequest(FetchPastRoomsReqSchema, { roomIds: [], from: 0, limit: 30, orderBy: 'DESC' }),
+        )
+        .catch((err: Error) => {
+          console.warn('fetchPastRoomsInfo failed:', err.message);
+          return undefined;
+        }),
+    ]);
+    // PlugNMeet répond status=false + "no active room found" quand il n'y a simplement aucune
+    // salle : ce n'est pas une panne.
+    const isEmpty = (res: { msg: string }): boolean => /no .*(room|record).*found/i.test(res.msg);
+    if (!activeRes.status && !isEmpty(activeRes)) {
+      throw new Error(activeRes.msg || 'getActiveRoomsInfo failed');
+    }
+
+    const active: (ActiveRoom & { sid: string })[] = (activeRes.status ? activeRes.rooms : []).map((r) => ({
+      roomId: r.roomInfo?.roomId ?? '',
+      title: r.roomInfo?.roomTitle ?? '',
+      participants: r.participantsInfo.map((p) => p.name || '?'),
+      created: String(r.roomInfo?.creationTime ?? ''),
+      sid: r.roomInfo?.sid ?? '',
+    }));
+    const activeSids = new Set(active.map((r) => r.sid));
+    const pastRooms = pastRes?.status ? (pastRes.result?.roomsList ?? []) : [];
+    const past: PastRoom[] = pastRooms
+      .filter((r) => !activeSids.has(r.roomSid))
+      .map((r) => ({
+        roomId: r.roomId,
+        title: r.roomTitle,
+        participants: Number(r.joinedParticipants) || 0,
+        created: String(r.created),
+        ended: String(r.ended),
+      }));
+    return { active: active.map(({ sid: _sid, ...room }) => room), past };
+  }
+
+  /** Retourne vrai si la requête a été traitée. */
+  return async function handleAdmin(
+    req: IncomingMessage,
+    res: ServerResponse,
+    pathname: string,
+  ): Promise<boolean> {
+    const ip = getClientIp(req);
+    const isPost = req.method === 'POST';
+
+    if (isPost && pathname === '/admin/login') {
+      if (!isSafeMutation(req)) return sendError(res, 400, 'invalid_request');
+      if (failures.peek(ip) >= LOGIN_MAX_FAILURES) {
+        return sendError(res, 429, 'too_many_attempts');
+      }
+      const body = (await readJson(req, 2000)) as { token?: unknown } | null;
+      const given = typeof body?.token === 'string' ? body.token : '';
+      if (!given || !crypto.timingSafeEqual(sha256(given), tokenDigest)) {
+        failures.increment(ip);
+        console.warn(`admin login failed from ${ip}`);
+        return sendError(res, 401, 'bad_token');
+      }
+      failures.reset(ip);
+      console.log(`admin login ok from ${ip}`);
+      sendJson(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie() });
+      return true;
+    }
+
+    if (isPost && pathname === '/admin/logout') {
+      sendJson(res, 200, { ok: true }, { 'Set-Cookie': clearedCookie });
+      return true;
+    }
+
+    if (!pathname.startsWith('/admin/api/')) return false;
+
+    // Tout le reste exige une session valide.
+    if (!isAuthenticated(req)) return sendError(res, 401, 'unauthorized');
+
+    try {
+      if (req.method === 'GET' && pathname === '/admin/api/rooms') {
+        sendJson(res, 200, await listRooms());
+        return true;
+      }
+
+      if (isPost && (pathname === '/admin/api/rooms/join' || pathname === '/admin/api/rooms/end')) {
+        if (!isSafeMutation(req)) return sendError(res, 400, 'invalid_request');
+        const request = await readRoomRequest(req);
+        if (!request) return sendError(res, 400, 'invalid_room');
+        const { roomId, locale } = request;
+
+        if (pathname === '/admin/api/rooms/join') {
+          const url = await createJoinUrl(pnm, config, roomId, { name: adminName(locale), isAdmin: true }, locale);
+          console.log(`admin joined room ${roomId} as moderator (from ${ip})`);
+          sendJson(res, 200, { url });
+        } else {
+          const result = await pnm.endRoom(createRequest(RoomEndReqSchema, { roomId }));
+          if (!result.status) throw new Error(result.msg || 'endRoom failed');
+          console.log(`admin ended room ${roomId} (from ${ip})`);
+          sendJson(res, 200, { ok: true });
+        }
+        return true;
+      }
+    } catch (err) {
+      console.error('admin api failed:', err);
+      return sendError(res, 502, 'plugnmeet_failed', err instanceof Error ? err.message : undefined);
+    }
+
+    return sendError(res, 404, 'not_found');
+  };
+}
