@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "images": {
+    "docker.io/livekit/livekit-server:v1.11.0": {
+      "registry": "docker.io",
+      "repository": "livekit/livekit-server",
+      "tag": "v1.11.0",
+      "arch": {
+        "aarch64-linux": {
+          "digest": "sha256:2c48853d095895f6cdcc4f9784741249e360cedc60d1f4e129d4766b0618e1c5",
+          "os": "linux",
+          "architecture": "arm64"
+        },
+        "x86_64-linux": {
+          "digest": "sha256:5a3073cd44ae1c6d2c2affdb4f71d6d79f692491ad06da332b872c934287b331",
+          "os": "linux",
+          "architecture": "amd64"
+        }
+      }
+    },
+    "docker.io/mynaparrot/plugnmeet-server:v2.5.2": {
+      "registry": "docker.io",
+      "repository": "mynaparrot/plugnmeet-server",
+      "tag": "v2.5.2",
+      "arch": {
+        "aarch64-linux": {
+          "digest": "sha256:6a45695ec080b094efb9b10a26632f18518a537a4f4f0951c265753041eb3e2b",
+          "os": "linux",
+          "architecture": "arm64"
+        },
+        "x86_64-linux": {
+          "digest": "sha256:8ed0dd849f7772995604521fb56bb3dba7716321e8932dff14caa3568c6c7f61",
+          "os": "linux",
+          "architecture": "amd64"
+        }
+      }
+    }
+  }
+}
