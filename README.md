@@ -12,8 +12,10 @@ NixOS module: `services.palabre`, exposed by this flake as `nixosModules.palabre
 
 ## Requirements
 
-- [pin-oci](https://github.com/corentin703/pin-oci.nix) (Podman containers pinned by digest) and
-  [sops-nix](https://github.com/Mic92/sops-nix), provided by the host;
+- [pin-oci](https://github.com/corentin703/pin-oci.nix) (Podman containers pinned by digest),
+  provided by the host;
+- a way to put secrets in files readable by root, whatever it is (sops-nix, agenix, systemd
+  credentials...): the module only takes file paths, see `secrets.*`;
 - a system user for rootless Podman (`linger`, subuid/subgid, home): option `user`;
 - a MySQL/MariaDB database (name, user and password in sops secrets);
 - a reverse proxy serving `host` over HTTPS, with `services.palabre.caddyHandles` in its vhost;
@@ -31,15 +33,22 @@ services.palabre = {
   user = "oci-visio";
   stateDir = "/srv/oci/visio/data/plugnmeet";
 
+  # Paths of files holding the secrets (absolute, outside the store, readable by root). Here with
+  # sops-nix; any other way of putting secrets in files works.
   secrets = {
-    livekitFile = ./livekit.sops.yaml;     # livekit_api_key, livekit_api_secret
-    plugnmeetFile = ./plugnmeet.sops.yaml; # plugnmeet_api_key, plugnmeet_secret, visio_admin_token,
-                                           # nats_user_nkey_seed, nats_callout_issuer_seed, nats_callout_xkey_seed
+    livekitApiKeyFile = config.sops.secrets.livekit-api-key.path;
+    livekitApiSecretFile = config.sops.secrets.livekit-api-secret.path;
+    plugnmeetApiKeyFile = config.sops.secrets.plugnmeet-api-key.path;
+    plugnmeetApiSecretFile = config.sops.secrets.plugnmeet-api-secret.path;
+    adminTokenFile = config.sops.secrets.palabre-admin-token.path;   # token of the /admin panel
+    natsUserSeedFile = config.sops.secrets.nats-user-seed.path;
+    natsCalloutIssuerSeedFile = config.sops.secrets.nats-callout-issuer-seed.path;
+    natsCalloutXkeySeedFile = config.sops.secrets.nats-callout-xkey-seed.path;
   };
   database = {
-    nameSecret = "plugnmeet_db";           # names of `sops.secrets` defined elsewhere
-    userSecret = "plugnmeet_user";
-    passwordSecret = "plugnmeet_password";
+    nameFile = config.sops.secrets.palabre-db-name.path;
+    userFile = config.sops.secrets.palabre-db-user.path;
+    passwordFile = config.sops.secrets.palabre-db-password.path;
   };
   nats = {                                 # public keys (nsc generate nkey --user|--account|--curve)
     userNkey = "U…";
@@ -58,6 +67,18 @@ services.palabre = {
 ```
 
 Ports (`ports.*`), image versions (`versions.*`) and the RTC range (`rtc.*`) have defaults.
+
+### Secrets
+
+LiveKit, PlugNMeet and the landing page read their secrets from their own configuration file,
+mixed with their other settings, so the module has to produce those files. Each one is a template
+in the Nix store with `@NAME@` in place of the secrets. Right before the container starts (an
+`ExecStartPre` of its unit, as root), the template is filled from the files you gave in
+`secrets.*` and `database.*`, written in the container's runtime directory
+(`/run/palabre-<container>/config`, owned by `user`, mode 0400) and mounted. No secret ever
+enters the store. After changing a secret, restart the container's unit
+(`podman-palabre-livekit-server`, `podman-palabre-plugnmeet-server`, `podman-palabre-landing`).
+A missing or unreadable file makes the unit fail with a message naming it.
 
 ## Pinned images
 

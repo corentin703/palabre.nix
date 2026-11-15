@@ -11,12 +11,20 @@
 }:
 let
   inherit (lib) mkEnableOption mkOption types;
+
+  # Chemin d'un fichier de secret, hors du store (le secret n'y entrerait pas en clair sinon).
+  # Lisible par root : le module en tire les configurations au démarrage (voir secrets.nix).
+  secretFile = types.pathWith {
+    inStore = false;
+    absolute = true;
+  };
 in
 {
   imports = [
     ./livekit.nix
     ./nats.nix
     ./redis.nix
+    ./secrets.nix
     ./plugnmeet.nix
     ./landing.nix
     ./caddy.nix
@@ -30,15 +38,15 @@ in
   };
 
   options.services.palabre = {
-    enable = mkEnableOption "Palabre (PlugNMeet + LiveKit + NATS + page d'accueil)";
+    enable = mkEnableOption "Palabre (PlugNMeet + LiveKit + NATS + landing page)";
 
     host = mkOption {
       type = types.str;
       example = "visio.example.org";
       description = ''
-        Nom de domaine public unique. PlugNMeet, LiveKit (`/livekit`), NATS
-        (`/ws`) et la page d'accueil y sont tous servis ; le reverse proxy
-        doit router par chemin (voir `caddyHandles`).
+        Single public domain name. PlugNMeet, LiveKit (`/livekit`), NATS
+        (`/ws`) and the landing page are all served from it: the reverse
+        proxy has to route by path (see `caddyHandles`).
       '';
     };
 
@@ -46,10 +54,10 @@ in
       type = types.str;
       example = "oci-visio";
       description = ''
-        Utilisateur système qui exécute les conteneurs en Podman rootless
-        (`podman.user` de pin-oci). Il doit exister, avec `linger`, des
-        plages subuid/subgid et un home pour la configuration de Podman : le
-        module ne le crée pas.
+        System user running the containers with rootless Podman (pin-oci's
+        `podman.user`). It must already exist, with `linger`, subuid/subgid
+        ranges and a home for Podman's configuration: the module does not
+        create it.
       '';
     };
 
@@ -57,9 +65,9 @@ in
       type = types.str;
       example = "/srv/oci/visio/data/plugnmeet";
       description = ''
-        Répertoire persistant monté dans le serveur PlugNMeet (client web
-        téléchargé, fichiers déposés, journaux). Créé (propriétaire
-        `user`) ; son parent doit exister.
+        Persistent directory mounted in the PlugNMeet server (downloaded web
+        client, uploaded files, logs). It is created (owned by `user`); its
+        parent must exist.
       '';
     };
 
@@ -67,32 +75,32 @@ in
       plugnmeet = mkOption {
         type = types.port;
         default = 10003;
-        description = "Port local du serveur PlugNMeet.";
+        description = "Local port of the PlugNMeet server.";
       };
       livekit = mkOption {
         type = types.port;
         default = 10005;
-        description = "Port local (HTTP/WebSocket) de LiveKit. Jamais ouvert dans le pare-feu.";
+        description = "Local (HTTP/WebSocket) port of LiveKit. Never opened in the firewall.";
       };
       landing = mkOption {
         type = types.port;
         default = 10006;
-        description = "Port local de la page d'accueil.";
+        description = "Local port of the landing page.";
       };
       nats = mkOption {
         type = types.port;
         default = 4222;
-        description = "Port NATS (client).";
+        description = "NATS (client) port.";
       };
       natsWebsocket = mkOption {
         type = types.port;
         default = 8222;
-        description = "Port WebSocket NATS, joint par le navigateur via `/ws`.";
+        description = "NATS WebSocket port, reached by the browser through `/ws`.";
       };
       redis = mkOption {
         type = types.port;
         default = 6379;
-        description = "Port de l'instance Redis dédiée (écoute en local uniquement).";
+        description = "Port of the dedicated Redis instance (listens on localhost only).";
       };
     };
 
@@ -100,12 +108,12 @@ in
       plugnmeet = mkOption {
         type = types.str;
         default = "v2.5.2";
-        description = "Tag de l'image du serveur PlugNMeet, et de la release du client web qu'il télécharge.";
+        description = "Tag of the PlugNMeet server image, and of the web client release it downloads.";
       };
       livekit = mkOption {
         type = types.str;
         default = "v1.11.0";
-        description = "Tag de l'image du serveur LiveKit.";
+        description = "Tag of the LiveKit server image.";
       };
     };
 
@@ -113,30 +121,52 @@ in
       portRangeStart = mkOption {
         type = types.port;
         default = 50000;
+        description = "First port of the UDP range LiveKit uses for media (opened in the firewall).";
       };
       portRangeEnd = mkOption {
         type = types.port;
         default = 60000;
+        description = "Last port of the UDP range LiveKit uses for media (opened in the firewall).";
       };
       tcpPort = mkOption {
         type = types.port;
         default = 7881;
+        description = "TCP port LiveKit uses for media when UDP is not available (opened in the firewall).";
       };
     };
 
     secrets = {
-      livekitFile = mkOption {
-        type = types.path;
-        description = "Fichier sops contenant `livekit_api_key` et `livekit_api_secret`.";
+      livekitApiKeyFile = mkOption {
+        type = secretFile;
+        description = "File containing the LiveKit API key.";
       };
-      plugnmeetFile = mkOption {
-        type = types.path;
-        description = ''
-          Fichier sops contenant `plugnmeet_api_key`, `plugnmeet_secret`,
-          `nats_user_nkey_seed`, `nats_callout_issuer_seed`,
-          `nats_callout_xkey_seed` et `visio_admin_token` (jeton du panneau
-          /admin).
-        '';
+      livekitApiSecretFile = mkOption {
+        type = secretFile;
+        description = "File containing the LiveKit API secret.";
+      };
+      plugnmeetApiKeyFile = mkOption {
+        type = secretFile;
+        description = "File containing the PlugNMeet API key.";
+      };
+      plugnmeetApiSecretFile = mkOption {
+        type = secretFile;
+        description = "File containing the PlugNMeet API secret.";
+      };
+      adminTokenFile = mkOption {
+        type = secretFile;
+        description = "File containing the token of the /admin panel.";
+      };
+      natsUserSeedFile = mkOption {
+        type = secretFile;
+        description = "File containing PlugNMeet's nkey \"user\" seed (`nats.userNkey` is its public key).";
+      };
+      natsCalloutIssuerSeedFile = mkOption {
+        type = secretFile;
+        description = "File containing the auth callout's nkey \"account\" seed (`nats.calloutIssuer` is its public key).";
+      };
+      natsCalloutXkeySeedFile = mkOption {
+        type = secretFile;
+        description = "File containing the auth callout's xkey seed (`nats.calloutXkey` is its public key).";
       };
     };
 
@@ -144,42 +174,44 @@ in
       host = mkOption {
         type = types.str;
         default = "127.0.0.1";
+        description = "Host of the MySQL/MariaDB server.";
       };
       port = mkOption {
         type = types.port;
         default = 3306;
+        description = "Port of the MySQL/MariaDB server.";
       };
       unit = mkOption {
         type = types.str;
         default = "mysql.service";
-        description = "Unité systemd de la base MySQL/MariaDB, dont PlugNMeet dépend.";
+        description = "systemd unit of the MySQL/MariaDB server, which PlugNMeet depends on.";
       };
-      nameSecret = mkOption {
-        type = types.str;
-        description = "Nom du secret `sops.secrets` contenant le nom de la base.";
+      nameFile = mkOption {
+        type = secretFile;
+        description = "File containing the name of the database.";
       };
-      userSecret = mkOption {
-        type = types.str;
-        description = "Nom du secret `sops.secrets` contenant l'utilisateur de la base.";
+      userFile = mkOption {
+        type = secretFile;
+        description = "File containing the database user.";
       };
-      passwordSecret = mkOption {
-        type = types.str;
-        description = "Nom du secret `sops.secrets` contenant le mot de passe de la base.";
+      passwordFile = mkOption {
+        type = secretFile;
+        description = "File containing the database password.";
       };
     };
 
     nats = {
       userNkey = mkOption {
         type = types.str;
-        description = "Clé publique nkey « user » (préfixe U) de PlugNMeet ; la graine est `nats_user_nkey_seed`.";
+        description = "PlugNMeet's public nkey \"user\" key (prefix U); its seed is `secrets.natsUserSeedFile`.";
       };
       calloutIssuer = mkOption {
         type = types.str;
-        description = "Clé publique nkey « account » (préfixe A) de l'auth callout ; la graine est `nats_callout_issuer_seed`.";
+        description = "Public nkey \"account\" key (prefix A) of the auth callout; its seed is `secrets.natsCalloutIssuerSeedFile`.";
       };
       calloutXkey = mkOption {
         type = types.str;
-        description = "Clé publique xkey (préfixe X) de l'auth callout ; la graine est `nats_callout_xkey_seed`.";
+        description = "Public xkey key (prefix X) of the auth callout; its seed is `secrets.natsCalloutXkeySeedFile`.";
       };
     };
 
@@ -187,16 +219,16 @@ in
       package = mkOption {
         type = types.package;
         default = pkgs.callPackage ./landing/package.nix { };
-        defaultText = lib.literalMD "`packages.<system>.palabre-landing` du flake (sinon construit avec le nixpkgs de l'hôte)";
+        defaultText = lib.literalMD "the flake's `packages.<system>.palabre-landing` (otherwise built with the host's nixpkgs)";
         description = ''
-          Paquet de la page d'accueil. Utilisé via le flake, c'est celui que la CI de Palabre
-          construit et met dans son cache binaire : l'hôte ne le recompile pas.
+          Package of the landing page. Through the flake it is the one Palabre's CI builds and
+          pushes to its binary cache, so the host does not compile it.
         '';
       };
       brandName = mkOption {
         type = types.str;
         default = "Visioconférence";
-        description = "Nom affiché sur la page d'accueil, dans son titre et sur /admin.";
+        description = "Name shown on the landing page, in its title and on /admin.";
       };
       defaultLocale = mkOption {
         type = types.enum [
@@ -205,30 +237,30 @@ in
         ];
         default = "fr";
         description = ''
-          Langue de la page quand rien ne dit celle de la personne. Elle est d'abord celle
-          qu'elle a choisie sur la page (boutons de langue), puis celle de son navigateur si
-          elle est disponible. Langues disponibles : français et anglais.
+          Language of the page when nothing says which one the visitor wants. A visitor gets the
+          language they picked on the page (language buttons), otherwise the first language of
+          their browser that is available, otherwise this one. Available languages: French and
+          English.
         '';
       };
       themeColor = mkOption {
         type = types.str;
         default = "#1f3a5f";
-        description = "Couleur de la barre du navigateur (`theme-color`).";
+        description = "Color of the browser bar (`theme-color`).";
       };
       logo = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = "Logo (png, jpg, webp, svg ou gif), affiché sur la page et utilisé comme icône.";
+        description = "Logo (png, jpg, webp, svg or gif), shown on the page and used as its icon.";
       };
       css = mkOption {
         type = types.lines;
         default = "";
         example = lib.literalExpression "builtins.readFile ./theme.css";
         description = ''
-          CSS injecté après la feuille de style de base de la page d'accueil :
-          il peut surcharger les variables de `:root` (`--brand`, `--action`,
-          `--accent`, `--page-bg`...) comme n'importe quelle règle. Voir le
-          README du module pour la liste des variables et du balisage.
+          CSS injected after the landing page's base stylesheet: it can override the `:root`
+          variables (`--brand`, `--action`, `--accent`, `--page-bg`...) like any other rule. See
+          the README for the list of variables and the markup.
         '';
       };
     };
@@ -237,10 +269,10 @@ in
       type = types.lines;
       readOnly = true;
       description = ''
-        Directives Caddy à placer dans le vhost de `host` : routage par chemin
-        vers LiveKit, NATS et la page d'accueil. Le reste va à PlugNMeet
-        (`ports.plugnmeet`). Les en-têtes de sécurité du vhost doivent
-        autoriser caméra, micro et partage d'écran (`Permissions-Policy`).
+        Caddy directives for the vhost of `host`: path-based routing to LiveKit,
+        NATS and the landing page. Everything else goes to PlugNMeet
+        (`ports.plugnmeet`). The vhost's security headers must allow camera,
+        microphone and screen sharing (`Permissions-Policy`).
       '';
     };
   };

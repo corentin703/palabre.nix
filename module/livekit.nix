@@ -9,21 +9,16 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    sops.secrets.palabre-livekit-api-key = {
-      sopsFile = cfg.secrets.livekitFile;
-      key = "livekit_api_key";
-    };
-
-    sops.secrets.palabre-livekit-api-secret = {
-      sopsFile = cfg.secrets.livekitFile;
-      key = "livekit_api_secret";
-    };
-
-    sops.templates.palabre-livekit-config = {
+    services.palabre.rendered.livekit = {
+      unit = "podman-palabre-livekit-server";
+      secrets = {
+        LIVEKIT_API_KEY = cfg.secrets.livekitApiKeyFile;
+        LIVEKIT_API_SECRET = cfg.secrets.livekitApiSecretFile;
+      };
       content = ''
         port: ${toString cfg.ports.livekit}
         keys:
-          ${config.sops.placeholder.palabre-livekit-api-key}: ${config.sops.placeholder.palabre-livekit-api-secret}
+          @LIVEKIT_API_KEY@: @LIVEKIT_API_SECRET@
         redis:
           address: 127.0.0.1:${toString cfg.ports.redis}
         rtc:
@@ -32,14 +27,10 @@ in
           tcp_port: ${toString rtcTcpPort}
           use_external_ip: true
         webhook:
-          api_key: ${config.sops.placeholder.palabre-livekit-api-key}
+          api_key: @LIVEKIT_API_KEY@
           urls:
             - https://${cfg.host}/webhook
       '';
-      owner = ociUser;
-      mode = "0400";
-
-      restartUnits = [ "podman-palabre-livekit-server.service" ];
     };
 
     # Projet "palabre" (livekit + plugnmeet) : cible podman-palabre.target.
@@ -49,7 +40,7 @@ in
       image = "docker.io/livekit/livekit-server:${cfg.versions.livekit}";
       podman.user = ociUser;
       volumes = [
-        "${config.sops.templates.palabre-livekit-config.path}:/etc/livekit.yaml:ro"
+        "${cfg.rendered.livekit.path}:/etc/livekit.yaml:ro"
       ];
       cmd = [
         "--config"

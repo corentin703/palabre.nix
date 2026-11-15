@@ -8,38 +8,30 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    sops.secrets.palabre-plugnmeet-api-key = {
-      sopsFile = cfg.secrets.plugnmeetFile;
-      key = "plugnmeet_api_key";
-    };
-    sops.secrets.palabre-plugnmeet-secret = {
-      sopsFile = cfg.secrets.plugnmeetFile;
-      key = "plugnmeet_secret";
-    };
-    sops.secrets.palabre-nats-user-nkey-seed = {
-      sopsFile = cfg.secrets.plugnmeetFile;
-      key = "nats_user_nkey_seed";
-    };
-    sops.secrets.palabre-nats-callout-issuer-seed = {
-      sopsFile = cfg.secrets.plugnmeetFile;
-      key = "nats_callout_issuer_seed";
-    };
-    sops.secrets.palabre-nats-callout-xkey-seed = {
-      sopsFile = cfg.secrets.plugnmeetFile;
-      key = "nats_callout_xkey_seed";
-    };
-
     systemd.tmpfiles.rules = [
       "d ${appDir} 0750 ${ociUser} ${ociUser} -"
     ];
 
-    sops.templates.palabre-plugnmeet-config = {
+    services.palabre.rendered.plugnmeet = {
+      unit = "podman-palabre-plugnmeet-server";
+      secrets = {
+        PLUGNMEET_API_KEY = cfg.secrets.plugnmeetApiKeyFile;
+        PLUGNMEET_API_SECRET = cfg.secrets.plugnmeetApiSecretFile;
+        LIVEKIT_API_KEY = cfg.secrets.livekitApiKeyFile;
+        LIVEKIT_API_SECRET = cfg.secrets.livekitApiSecretFile;
+        DB_NAME = cfg.database.nameFile;
+        DB_USER = cfg.database.userFile;
+        DB_PASSWORD = cfg.database.passwordFile;
+        NATS_USER_SEED = cfg.secrets.natsUserSeedFile;
+        NATS_CALLOUT_ISSUER_SEED = cfg.secrets.natsCalloutIssuerSeedFile;
+        NATS_CALLOUT_XKEY_SEED = cfg.secrets.natsCalloutXkeySeedFile;
+      };
       content = ''
         client:
           port: ${toString cfg.ports.plugnmeet}
           path: "./client/dist"
-          api_key: ${config.sops.placeholder.palabre-plugnmeet-api-key}
-          secret: ${config.sops.placeholder.palabre-plugnmeet-secret}
+          api_key: @PLUGNMEET_API_KEY@
+          secret: @PLUGNMEET_API_SECRET@
           token_validity: 10m
           webhook_conf:
             enable: true
@@ -84,8 +76,8 @@ in
 
         livekit_info:
           host: "https://${cfg.host}/livekit"
-          api_key: ${config.sops.placeholder.palabre-livekit-api-key}
-          secret: ${config.sops.placeholder.palabre-livekit-api-secret}
+          api_key: @LIVEKIT_API_KEY@
+          secret: @LIVEKIT_API_SECRET@
 
         redis_info:
           host: 127.0.0.1:${toString cfg.ports.redis}
@@ -95,9 +87,9 @@ in
           driver_name: mysql
           host: ${cfg.database.host}
           port: ${toString cfg.database.port}
-          username: ${config.sops.placeholder.${cfg.database.userSecret}}
-          password: ${config.sops.placeholder.${cfg.database.passwordSecret}}
-          db: ${config.sops.placeholder.${cfg.database.nameSecret}}
+          username: @DB_USER@
+          password: @DB_PASSWORD@
+          db: @DB_NAME@
           prefix: pnm_
           charset: "utf8mb4"
           loc: "UTC"
@@ -110,9 +102,9 @@ in
           nats_ws_urls:
             - "https://${cfg.host}/ws"
           account: PNM
-          nkey: ${config.sops.placeholder.palabre-nats-user-nkey-seed}
-          auth_callout_issuer_private: ${config.sops.placeholder.palabre-nats-callout-issuer-seed}
-          auth_callout_xkey_private: ${config.sops.placeholder.palabre-nats-callout-xkey-seed}
+          nkey: @NATS_USER_SEED@
+          auth_callout_issuer_private: @NATS_CALLOUT_ISSUER_SEED@
+          auth_callout_xkey_private: @NATS_CALLOUT_XKEY_SEED@
           num_replicas: 1
           room_stream_name: "pnm-room-stream"
           subjects:
@@ -153,10 +145,6 @@ in
           enable_del_artifacts_backup: true
           del_artifacts_backup_duration: 72h
       '';
-      owner = ociUser;
-      mode = "0400";
-
-      restartUnits = [ "podman-palabre-plugnmeet-server.service" ];
     };
 
     virtualisation.pin-oci.projects.palabre.enable = true;
@@ -167,7 +155,7 @@ in
       podman.user = ociUser;
       volumes = [
         "${appDir}:/app:rw"
-        "${config.sops.templates.palabre-plugnmeet-config.path}:/app/config.yaml:ro"
+        "${cfg.rendered.plugnmeet.path}:/app/config.yaml:ro"
       ];
       extraOptions = [
         # Réseau hôte : joint LiveKit, Redis, MariaDB et NATS (tous en

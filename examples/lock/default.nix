@@ -12,12 +12,6 @@
   };
   virtualisation.oci-containers.backend = "podman";
 
-  sops.age.keyFile = "/var/lib/sops-nix/key.txt";
-  sops.secrets = lib.genAttrs [ "db_name" "db_user" "db_password" ] (name: {
-    sopsFile = ./secrets.sops.yaml;
-    key = name;
-  });
-
   users.groups.oci-palabre = { };
   users.users.oci-palabre = {
     isSystemUser = true;
@@ -36,14 +30,21 @@
     host = "visio.example.org";
     user = "oci-palabre";
     stateDir = "/srv/palabre";
-    secrets = {
-      livekitFile = ./secrets.sops.yaml;
-      plugnmeetFile = ./secrets.sops.yaml;
-    };
+    # Fichiers fictifs : jamais lus ici (le module ne les lit qu'au démarrage du service).
+    secrets = lib.genAttrs [
+      "livekitApiKeyFile"
+      "livekitApiSecretFile"
+      "plugnmeetApiKeyFile"
+      "plugnmeetApiSecretFile"
+      "adminTokenFile"
+      "natsUserSeedFile"
+      "natsCalloutIssuerSeedFile"
+      "natsCalloutXkeySeedFile"
+    ] (name: "/run/secrets/palabre-${name}");
     database = {
-      nameSecret = "db_name";
-      userSecret = "db_user";
-      passwordSecret = "db_password";
+      nameFile = "/run/secrets/palabre-db-name";
+      userFile = "/run/secrets/palabre-db-user";
+      passwordFile = "/run/secrets/palabre-db-password";
     };
     nats = {
       userNkey = "UEXAMPLE";

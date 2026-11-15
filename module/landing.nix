@@ -44,27 +44,24 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    sops.secrets.palabre-admin-token = {
-      sopsFile = cfg.secrets.plugnmeetFile;
-      key = "visio_admin_token";
-    };
-
-    sops.templates.palabre-landing-env = {
+    services.palabre.rendered.landing = {
+      unit = "podman-palabre-landing";
+      secrets = {
+        PLUGNMEET_API_KEY = cfg.secrets.plugnmeetApiKeyFile;
+        PLUGNMEET_API_SECRET = cfg.secrets.plugnmeetApiSecretFile;
+        ADMIN_TOKEN = cfg.secrets.adminTokenFile;
+      };
       content = ''
         PORT=${toString cfg.ports.landing}
         BIND_HOST=127.0.0.1
         PLUGNMEET_HOST=https://${cfg.host}
         PLUGNMEET_API_URL=http://127.0.0.1:${toString cfg.ports.plugnmeet}
-        PLUGNMEET_API_KEY=${config.sops.placeholder.palabre-plugnmeet-api-key}
-        PLUGNMEET_SECRET=${config.sops.placeholder.palabre-plugnmeet-secret}
-        ADMIN_TOKEN=${config.sops.placeholder.palabre-admin-token}
+        PLUGNMEET_API_KEY=@PLUGNMEET_API_KEY@
+        PLUGNMEET_SECRET=@PLUGNMEET_API_SECRET@
+        ADMIN_TOKEN=@ADMIN_TOKEN@
         LANDING_THEME_COLOR=${lcfg.themeColor}
         LANDING_DEFAULT_LOCALE=${lcfg.defaultLocale}
       '';
-      owner = ociUser;
-      mode = "0400";
-
-      restartUnits = [ "podman-palabre-landing.service" ];
     };
 
     virtualisation.oci-containers.containers.palabre-landing = {
@@ -72,14 +69,14 @@ in
       imageStream = palabre-landing-image;
       podman.user = ociUser;
       environment = {
-        # Valeur hors du fichier sops : pas secrète, et peut contenir des
-        # caractères que le format d'environnement n'aime pas.
+        # Valeur hors du fichier d'environnement : pas secrète, et peut contenir des
+        # caractères que ce format n'aime pas.
         LANDING_BRAND_NAME = lcfg.brandName;
       }
       // lib.optionalAttrs hasCss { LANDING_CSS_FILE = "/etc/palabre/custom.css"; }
       // lib.optionalAttrs (lcfg.logo != null) { LANDING_LOGO_FILE = logoTarget; };
       environmentFiles = [
-        config.sops.templates.palabre-landing-env.path
+        cfg.rendered.landing.path
       ];
       volumes =
         lib.optional hasCss "${cssFile}:/etc/palabre/custom.css:ro"

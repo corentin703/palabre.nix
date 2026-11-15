@@ -13,21 +13,16 @@
     # Conteneurs Podman verrouillés par digest. Pas de `follows` sur nixpkgs : voulu par
     # pin-oci (cache binaire).
     pin-oci.url = "github:corentin703/pin-oci.nix";
-
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
-  # Le module suppose que l'hôte fournit pin-oci et sops-nix ; ils ne sont des entrées de ce
+  # Le module suppose que l'hôte fournit pin-oci. Il ne connaît aucun gestionnaire de secrets : il
+  # reçoit des chemins de fichiers (services.palabre.secrets.*). pin-oci n'est une entrée de ce
   # flake que pour le verrouiller (`pin-oci lock --flake .#lock`) et le tester.
   outputs =
     {
       self,
       nixpkgs,
       pin-oci,
-      sops-nix,
     }:
     let
       systems = [
@@ -59,7 +54,6 @@
         system = "x86_64-linux";
         modules = [
           pin-oci.nixosModules.default
-          sops-nix.nixosModules.sops
           self.nixosModules.palabre
           ./examples/lock
         ];
