@@ -1,7 +1,7 @@
 import { Rich, useI18n } from '../i18n';
 
 interface Props {
-  /** Page d'un salon existant (lien partageable) plutôt que de création. */
+  /** Page of an existing room (shareable link) rather than a creation page. */
   preset: boolean;
   moderator: boolean;
 }
@@ -30,7 +30,7 @@ function Help({ items }: { items: string[] }) {
   );
 }
 
-/** Le mode d'emploi, à côté du formulaire. */
+/** The user guide, next to the form. */
 export function Guide({ preset, moderator }: Props) {
   const { t } = useI18n();
   const g = t.guide;

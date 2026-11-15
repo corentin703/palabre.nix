@@ -1,6 +1,6 @@
 import type { RuntimeConfig } from '../shared/api';
 
-/** Applique la personnalisation de l'hôte : titre, couleur du navigateur, icône et CSS. */
+/** Applies the host's customization: title, browser color, icon and CSS. */
 export async function applyRuntimeConfig(
   config: RuntimeConfig,
   { customCss }: { customCss: boolean },
@@ -19,8 +19,8 @@ export async function applyRuntimeConfig(
     document.head.append(icon);
   }
 
-  // Après la feuille de l'application, pour pouvoir tout surcharger ; on attend qu'elle soit
-  // chargée pour ne pas afficher la page avec le style par défaut un instant.
+  // After the application's stylesheet, so that it can override everything; we wait for it
+  // to be loaded so the page is not shown with the default style for a moment.
   if (customCss && config.hasCustomCss) {
     await new Promise<void>((resolve) => {
       const style = document.createElement('link');

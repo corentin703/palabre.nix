@@ -8,7 +8,7 @@ interface Props {
   note?: string;
 }
 
-/** Un lien en lecture seule, avec son bouton « Copier ». */
+/** A read-only link, with its "Copy" button. */
 export function CopyField({ id, label, value, note }: Props) {
   const { t } = useI18n();
   const input = useRef<HTMLInputElement>(null);

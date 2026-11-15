@@ -1,6 +1,6 @@
 /**
- * Identifiant de salon : les identifiants PlugNMeet restent dans un jeu de caractères restreint
- * (contrainte NATS, voir config.yaml du serveur). Même code côté serveur et dans le navigateur.
+ * Room identifier: PlugNMeet identifiers stay within a restricted character set
+ * (NATS constraint, see the server's config.yaml). Same code on the server and in the browser.
  */
 export function slugifyRoomId(input: string, max = 64): string {
   return input
@@ -13,11 +13,11 @@ export function slugifyRoomId(input: string, max = 64): string {
     .replace(/-+$/, '');
 }
 
-/** « nom-empreinte » : l'empreinte (12 caractères hexadécimaux) est ajoutée par le serveur. */
+/** "name-tag": the tag (12 hexadecimal characters) is added by the server. */
 export const ROOM_ID_RE = /^(.+)-([0-9a-f]{12})$/;
 
-/** Clé de modérateur : 128 bits en hexadécimal. */
+/** Moderator key: 128 bits in hexadecimal. */
 export const MOD_KEY_RE = /^[0-9a-f]{32}$/;
 
-/** Longueur maximale du nom d'un salon : 50 + « - » + 12 = 63 caractères (limite : 64). */
+/** Maximum length of a room name: 50 + "-" + 12 = 63 characters (limit: 64). */
 export const ROOM_NAME_MAX = 50;

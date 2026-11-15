@@ -2,21 +2,21 @@ import * as crypto from 'node:crypto';
 import { ROOM_ID_RE } from '../shared/slug.js';
 import type { RoomKey } from '../shared/api.js';
 
-// Le droit de modération voyage dans un lien secret, utilisable depuis n'importe quel appareil
-// et n'importe quand :
-//  - à la création, le navigateur obtient une clé aléatoire (`mod`, 128 bits) ;
-//  - l'identifiant du salon est « nom-empreinte », l'empreinte (12 caractères) étant un HMAC de
-//    la clé avec le secret du serveur : publique, mais impossible à fabriquer ou à inverser sans
-//    ce secret ;
-//  - est modérateur quiconque présente une clé dont l'empreinte est celle du salon (lien de
-//    modérateur `/r/<salon>?m=<clé>`), quel que soit l'ordre d'arrivée et que le salon existe
-//    déjà ou non.
-// Aucun état n'est stocké côté serveur : un lien reste valable des mois.
+// The right to moderate travels in a secret link, usable from any device and at any
+// time:
+//  - at creation, the browser gets a random key (`mod`, 128 bits);
+//  - the room identifier is "name-tag", the tag (12 characters) being an HMAC of the key
+//    with the server's secret: public, but impossible to forge or to invert without that
+//    secret;
+//  - whoever presents a key whose tag is the room's tag is a moderator (moderator link
+//    `/r/<room>?m=<key>`), whatever the order of arrival and whether the room already
+//    exists or not.
+// No state is stored on the server: a link stays valid for months.
 
 const TAG_LENGTH = 12;
 
 export interface RoomKeys {
-  /** Empreinte publique d'une clé de modérateur. */
+  /** Public tag of a moderator key. */
   tagOf(mod: string): string;
   newKey(): RoomKey;
 }
@@ -34,7 +34,7 @@ export function createRoomKeys(secret: string): RoomKeys {
   };
 }
 
-/** Nom lisible d'un identifiant de salon (sans l'empreinte). */
+/** Readable name of a room identifier (without the tag). */
 export function roomLabel(roomId: string): string {
   return ROOM_ID_RE.exec(roomId)?.[1] ?? roomId;
 }

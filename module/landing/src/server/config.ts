@@ -1,20 +1,20 @@
 import { isLocale } from '../shared/locales.js';
 import type { Locale } from '../shared/locales.js';
 
-/** Configuration lue dans l'environnement (voir services.palabre.landing.* et landing.nix). */
+/** Configuration read from the environment (see services.palabre.landing.* and landing.nix). */
 export interface Config {
   port: number;
   bindHost: string;
-  /** URL publique : uniquement pour la redirection du navigateur. */
+  /** Public URL: only for the browser redirect. */
   plugnmeetHost: string;
   /**
-   * URL interne pour les appels API serveur-à-serveur. Passer par l'URL publique depuis le
-   * conteneur échoue (ECONNREFUSED sur l'IP publique de l'hôte lui-même, vu en prod).
+   * Internal URL for server-to-server API calls. Going through the public URL from the
+   * container fails (ECONNREFUSED on the host's own public IP, seen in production).
    */
   plugnmeetApiUrl: string;
   plugnmeetApiKey: string;
   plugnmeetSecret: string;
-  /** Absent : le panneau /admin est désactivé. */
+  /** Absent: the /admin panel is disabled. */
   adminToken: string | undefined;
   defaultLocale: Locale;
   brandName: string;

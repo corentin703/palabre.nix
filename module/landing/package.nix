@@ -23,12 +23,13 @@ buildNpmPackage {
 
   npmDepsHash = "sha256-G2i0X1EX22NFkmZW06u0q1yWNywOkyNZm1CjTJAOyKU=";
 
-  # plugnmeet-sdk-js / plugnmeet-protocol-js ont un script `preinstall` qui refuse tout
-  # gestionnaire autre que pnpm (`npx only-allow pnpm`) ; il ne fait rien d'utile pour nous (pas
-  # de build natif) donc on l'ignore plutôt que d'ajouter pnpm au pipeline pour ce seul paquet.
+  # plugnmeet-sdk-js / plugnmeet-protocol-js have a `preinstall` script that refuses
+  # any package manager other than pnpm (`npx only-allow pnpm`); it does nothing
+  # useful for us (no native build), so we skip it rather than add pnpm to the
+  # pipeline for this single package.
   npmFlags = [ "--ignore-scripts" ];
 
-  # `npm run build` : le serveur (tsc -> dist/server) et l'interface (vite -> dist/web).
+  # `npm run build`: the server (tsc -> dist/server) and the interface (vite -> dist/web).
   inherit nodejs;
 
   doCheck = true;
@@ -41,7 +42,7 @@ buildNpmPackage {
   installPhase = ''
     runHook preInstall
 
-    # Seules les dépendances d'exécution (le SDK PlugNMeet) restent dans l'image.
+    # Only the runtime dependencies (the PlugNMeet SDK) stay in the image.
     npm prune --omit=dev --no-save --ignore-scripts
 
     mkdir -p $out/{bin,share/palabre-landing}
@@ -57,7 +58,7 @@ buildNpmPackage {
   nativeBuildInputs = [ makeWrapper ];
 
   meta = {
-    description = "Page d'accueil publique (création/jonction de salon anonyme) pour PlugNMeet (Palabre)";
+    description = "Public landing page (anonymous room creation/joining) for PlugNMeet (Palabre)";
     license = lib.licenses.mit;
     mainProgram = "palabre-landing";
     platforms = lib.platforms.linux;

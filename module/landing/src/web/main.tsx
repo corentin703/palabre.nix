@@ -7,8 +7,8 @@ import { I18nProvider } from './i18n';
 import { applyRuntimeConfig } from './runtime-config';
 
 /**
- * Chaque page est son propre morceau de code, chargé seulement quand on la visite. Il l'est avant
- * le CSS de l'hôte : ce dernier doit venir après la feuille de la page pour pouvoir la surcharger.
+ * Each page is its own chunk of code, loaded only when it is visited. It is loaded before the
+ * host's CSS: the latter has to come after the page's stylesheet to be able to override it.
  */
 async function loadPage(config: RuntimeConfig, isAdmin: boolean): Promise<ReactNode> {
   if (isAdmin) {
@@ -24,7 +24,7 @@ async function start() {
   const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
 
   const page = await loadPage(config, isAdmin);
-  // Le panneau d'administration garde son style neutre.
+  // The administration panel keeps its neutral style.
   await applyRuntimeConfig(config, { customCss: !isAdmin });
 
   createRoot(document.getElementById('root')!).render(

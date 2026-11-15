@@ -13,7 +13,7 @@ export interface JoinDeps {
   keys: RoomKeys;
 }
 
-/** Ce que le navigateur a saisi, avant de savoir de quel salon il s'agit. */
+/** What the browser typed, before we know which room it is about. */
 interface RoomTarget {
   roomId: string;
   title: string;
@@ -21,11 +21,11 @@ interface RoomTarget {
 }
 
 /**
- * Deux cas :
- *  - lien (identifiant « nom-empreinte ») : on rejoint ce salon ; on en est le modérateur
- *    seulement si on présente une clé dont l'empreinte correspond (lien de modérateur) ;
- *  - intitulé saisi sur la page d'accueil : on crée SON salon avec la clé fournie par le
- *    navigateur ; l'identifiant en porte l'empreinte.
+ * Two cases:
+ *  - link (identifier "name-tag"): we join that room; we are its moderator only if we
+ *    present a key whose tag matches (moderator link);
+ *  - name typed on the home page: we create OUR room with the key given by the browser;
+ *    the identifier carries its tag.
  */
 function resolveRoom(request: JoinRequest, keys: RoomKeys): RoomTarget {
   const typed = request.room.trim();
@@ -47,7 +47,7 @@ function resolveRoom(request: JoinRequest, keys: RoomKeys): RoomTarget {
   };
 }
 
-/** Crée le salon s'il n'est pas ouvert, puis retourne l'adresse de la réunion. */
+/** Creates the room if it is not open, then returns the meeting address. */
 export async function joinRoom(request: JoinRequest, { pnm, config, keys }: JoinDeps): Promise<JoinResponse> {
   const displayName = request.name.trim().slice(0, 64) || guestName(request.locale);
   const { roomId, title, isModerator } = resolveRoom(request, keys);
@@ -62,8 +62,8 @@ export async function joinRoom(request: JoinRequest, { pnm, config, keys }: Join
           roomId,
           metadata: {
             roomTitle: title.slice(0, 128),
-            // Où le client PlugNMeet renvoie la personne quand elle quitte la réunion : retour
-            // à cette page d'accueil.
+            // Where the PlugNMeet client sends the person when they leave the meeting: back to
+            // this home page.
             logoutUrl: `${config.plugnmeetHost}/`,
             welcomeMessage: welcomeMessage(request.locale, escapeHtml(title)),
             roomFeatures: {
@@ -93,7 +93,7 @@ export async function joinRoom(request: JoinRequest, { pnm, config, keys }: Join
       if (!created.status) throw new Error(created.msg || 'createRoom failed');
     }
 
-    // Modérateur = propriétaire du salon, jamais « le premier arrivé ».
+    // Moderator = owner of the room, never "the first to arrive".
     const url = await createJoinUrl(pnm, config, roomId, { name: displayName, isAdmin: isModerator }, request.locale);
     return { url };
   } catch (err) {

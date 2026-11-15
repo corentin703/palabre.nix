@@ -10,13 +10,13 @@ import { FetchPastRoomsReqSchema, RoomEndReqSchema, createJoinUrl, createRequest
 import type { PnmApi } from './plugnmeet.js';
 import { WindowCounter } from './window-counter.js';
 
-// Panneau d'administration (/admin) : liste des salles PlugNMeet et fermeture manuelle.
-// Authentification par un jeton unique (sops) échangé contre un cookie de session signé.
+// Administration panel (/admin): list of PlugNMeet rooms and manual closing.
+// Authentication by a single token (from a secret file) exchanged for a signed session cookie.
 
 const SESSION_MAX_AGE_S = 8 * 60 * 60;
 const COOKIE_NAME = 'admin_session';
 
-/** Anti force-brute sur le jeton : peu d'essais ratés par IP et par fenêtre. */
+/** Brute-force protection on the token: few failed attempts per IP and per window. */
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_FAILURES = 5;
 
@@ -33,7 +33,7 @@ function parseCookies(header: string | undefined): Record<string, string> {
   return cookies;
 }
 
-/** Les états qui changent des choses n'acceptent que du JSON, de ce même hôte (voir isSafeMutation). */
+/** Requests that change something only accept JSON, from this same host (see isSafeMutation). */
 function isSafeMutation(req: IncomingMessage): boolean {
   if (!(req.headers['content-type'] ?? '').startsWith('application/json')) return false;
   const origin = req.headers.origin;
@@ -51,7 +51,7 @@ export interface AdminDeps {
   adminToken: string;
 }
 
-/** Retourne un gestionnaire qui répond aux routes /admin/login, /admin/logout et /admin/api/*. */
+/** Returns a handler answering the /admin/login, /admin/logout and /admin/api/* routes. */
 export function createAdminHandler({ pnm, config, adminToken }: AdminDeps) {
   const tokenDigest = sha256(adminToken);
   const failures = new WindowCounter(LOGIN_WINDOW_MS);
@@ -75,7 +75,7 @@ export function createAdminHandler({ pnm, config, adminToken }: AdminDeps) {
   };
   const clearedCookie = `${COOKIE_NAME}=; Max-Age=0; ${cookieAttributes}`;
 
-  /** `roomId` (et langue de la personne) du corps JSON, ou null s'il est absent ou mal formé. */
+  /** `roomId` (and the visitor's language) from the JSON body, or null if absent or malformed. */
   async function readRoomRequest(req: IncomingMessage): Promise<{ roomId: string; locale: Locale } | null> {
     const body = (await readJson(req, 2000)) as { roomId?: unknown; locale?: unknown } | null;
     if (typeof body?.roomId !== 'string' || !ROOM_ID_RE.test(body.roomId)) return null;
@@ -83,8 +83,8 @@ export function createAdminHandler({ pnm, config, adminToken }: AdminDeps) {
   }
 
   async function listRooms(): Promise<RoomsListing> {
-    // L'historique est secondaire : s'il échoue, on affiche quand même les salles ouvertes
-    // plutôt que de bloquer toute la page.
+    // The history is secondary: if it fails, the open rooms are still shown
+    // rather than blocking the whole page.
     const [activeRes, pastRes] = await Promise.all([
       pnm.getActiveRoomsInfo(),
       pnm
@@ -96,8 +96,8 @@ export function createAdminHandler({ pnm, config, adminToken }: AdminDeps) {
           return undefined;
         }),
     ]);
-    // PlugNMeet répond status=false + "no active room found" quand il n'y a simplement aucune
-    // salle : ce n'est pas une panne.
+    // PlugNMeet answers status=false + "no active room found" when there is simply no
+    // room: that is not an outage.
     const isEmpty = (res: { msg: string }): boolean => /no .*(room|record).*found/i.test(res.msg);
     if (!activeRes.status && !isEmpty(activeRes)) {
       throw new Error(activeRes.msg || 'getActiveRoomsInfo failed');
@@ -124,7 +124,7 @@ export function createAdminHandler({ pnm, config, adminToken }: AdminDeps) {
     return { active: active.map(({ sid: _sid, ...room }) => room), past };
   }
 
-  /** Retourne vrai si la requête a été traitée. */
+  /** Returns true if the request was handled. */
   return async function handleAdmin(
     req: IncomingMessage,
     res: ServerResponse,
@@ -158,7 +158,7 @@ export function createAdminHandler({ pnm, config, adminToken }: AdminDeps) {
 
     if (!pathname.startsWith('/admin/api/')) return false;
 
-    // Tout le reste exige une session valide.
+    // Everything else requires a valid session.
     if (!isAuthenticated(req)) return sendError(res, 401, 'unauthorized');
 
     try {

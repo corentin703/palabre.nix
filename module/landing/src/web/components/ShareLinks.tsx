@@ -2,13 +2,13 @@ import { useI18n } from '../i18n';
 import { CopyField } from './CopyField';
 
 interface Props {
-  /** Identifiant du salon (« nom-empreinte »). */
+  /** Room identifier ("name-tag"). */
   roomId: string;
-  /** Clé de modérateur ; vide pour un simple participant. */
+  /** Moderator key; empty for a regular participant. */
   mod: string;
 }
 
-/** Les deux liens d'un salon : à transmettre aux participants, et le lien de modérateur. */
+/** The two links of a room: the one to send to participants, and the moderator link. */
 export function ShareLinks({ roomId, mod }: Props) {
   const { t } = useI18n();
   const participantsUrl = `${location.origin}/r/${roomId}`;

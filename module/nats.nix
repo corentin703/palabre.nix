@@ -3,26 +3,24 @@ let
   cfg = config.services.palabre;
 in
 {
-  # NATS natif (comme Redis -- voir redis.nix), pas un
-  # conteneur : requis par PlugNMeet pour son bus d'événements temps réel
-  # (chat, tableau blanc, présence...) et le "auth callout" qui autorise
-  # dynamiquement chaque client à se connecter en WebSocket avec un scope
-  # limité à sa réunion.
+  # Native NATS (like Redis, see redis.nix), not a container: required by
+  # PlugNMeet for its real-time event bus (chat, whiteboard, presence...)
+  # and the "auth callout" that dynamically authorizes each client to
+  # connect over WebSocket with a scope limited to its meeting.
   #
-  # Les 3 paires de clés nkey/xkey sont générées une fois avec
-  # `nsc generate nkey --user|--account|--curve`, en suivant exactement la
-  # procédure de l'installeur officiel (mynaparrot/plugNmeet-install). Seules
-  # les clés PUBLIQUES passent par les options `nats.*` ; les graines
-  # correspondantes sont dans `secrets.plugnmeetFile` (nats_user_nkey_seed /
-  # nats_callout_issuer_seed / nats_callout_xkey_seed) et servent côté
-  # PlugNMeet (serveur) à prouver qu'il a le droit d'agir en tant que cette
-  # identité.
+  # The 3 nkey/xkey pairs are generated once with
+  # `nsc generate nkey --user|--account|--curve`, following the official
+  # installer's procedure exactly (mynaparrot/plugNmeet-install). Only the
+  # PUBLIC keys go through the `nats.*` options; the matching seeds are in
+  # the files given to `secrets.natsUserSeedFile` /
+  # `secrets.natsCalloutIssuerSeedFile` / `secrets.natsCalloutXkeySeedFile`,
+  # and let the PlugNMeet server prove it may act as that identity.
   #
-  # Attention aux préfixes nkey (imposés par nats-server -t, qui valide ce
-  # fichier au build) : `users[].nkey` / `auth_callout.auth_users` veulent une
-  # clé "user" (préfixe U), `auth_callout.issuer` veut une clé "account"
-  # (préfixe A) -- ce n'est PAS le même nkey que celui du compte "PNM"
-  # lui-même (qui n'a pas de clé propre dans cette config non-operator-mode).
+  # Mind the nkey prefixes (enforced by nats-server -t, which validates this
+  # file at build time): `users[].nkey` / `auth_callout.auth_users` want a
+  # "user" key (prefix U), `auth_callout.issuer` wants an "account" key
+  # (prefix A) -- it is NOT the same nkey as the "PNM" account itself (which
+  # has no key of its own in this non-operator-mode config).
   config.services.nats = lib.mkIf cfg.enable {
     enable = true;
     jetstream = true;

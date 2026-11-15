@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { RateLimiter, WindowCounter } from './window-counter';
 
 describe('WindowCounter', () => {
-  it('compte dans la fenêtre puis repart de zéro', () => {
+  it('counts within the window then starts again from zero', () => {
     let now = 0;
     const counter = new WindowCounter(1000, () => now);
     expect(counter.increment('ip')).toBe(1);
@@ -13,7 +13,7 @@ describe('WindowCounter', () => {
     expect(counter.increment('ip')).toBe(1);
   });
 
-  it('compte chaque clé séparément et sait remettre à zéro', () => {
+  it('counts each key separately and can reset', () => {
     const counter = new WindowCounter(1000);
     counter.increment('a');
     expect(counter.peek('b')).toBe(0);
@@ -23,7 +23,7 @@ describe('WindowCounter', () => {
 });
 
 describe('RateLimiter', () => {
-  it('laisse passer `max` événements puis bloque jusqu’à la fin de la fenêtre', () => {
+  it('lets `max` events through then blocks until the end of the window', () => {
     let now = 0;
     const limiter = new RateLimiter(1000, 2, () => now);
     expect([limiter.hit('ip'), limiter.hit('ip'), limiter.hit('ip')]).toEqual([false, false, true]);

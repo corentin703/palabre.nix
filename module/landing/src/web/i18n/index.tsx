@@ -9,13 +9,13 @@ import type { Messages } from './fr';
 const MESSAGES: Record<Locale, Messages> = { fr, en };
 const STORAGE_KEY = 'visio:locale';
 
-/** Langue choisie sur cet appareil, sinon la première langue du navigateur que l'on sait traduire. */
+/** Language picked on this device, otherwise the first browser language we can translate. */
 function detectLocale(fallback: Locale): Locale {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (isLocale(saved)) return saved;
   } catch {
-    // localStorage peut être indisponible (navigation privée).
+    // localStorage may be unavailable (private browsing).
   }
   for (const language of navigator.languages) {
     const code = language.slice(0, 2).toLowerCase();
@@ -45,7 +45,7 @@ export function I18nProvider({ defaultLocale, children }: { defaultLocale: Local
         try {
           localStorage.setItem(STORAGE_KEY, next);
         } catch {
-          // Le choix ne sera pas retenu : sans conséquence.
+          // The choice will not be remembered: no consequence.
         }
       },
     }),
@@ -60,7 +60,7 @@ export function useI18n(): I18n {
   return value;
 }
 
-/** Choix de la langue : un bouton par langue. */
+/** Language choice: one button per language. */
 export function LocaleSwitcher() {
   const { locale, setLocale } = useI18n();
   return (
@@ -82,7 +82,7 @@ export function LocaleSwitcher() {
 
 const TAGS = /<(b|em)>(.*?)<\/\1>/g;
 
-/** Un texte des dictionnaires, avec ses balises <b> et <em> rendues (jamais de HTML brut). */
+/** A text from the dictionaries, with its <b> and <em> tags rendered (never raw HTML). */
 export function Rich({ text }: { text: string }) {
   const nodes: ReactNode[] = [];
   let last = 0;

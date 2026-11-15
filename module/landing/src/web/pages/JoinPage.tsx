@@ -19,7 +19,7 @@ import {
 } from '../room-storage';
 import '../styles/page.css';
 
-/** Lien vers un salon existant : /r/<salon>, avec la clé de modérateur éventuelle dans ?m=. */
+/** Link to an existing room: /r/<room>, with the moderator key, if any, in ?m=. */
 interface Preset {
   room: string;
   mod: string;
@@ -32,15 +32,15 @@ function readPreset(): Preset | null {
   try {
     decoded = decodeURIComponent(encoded);
   } catch {
-    // Identifiant invalide : traité comme une page de création.
+    // Invalid identifier: treated as a creation page.
   }
   const room = slugifyRoomId(decoded);
   return room ? { room, mod: new URLSearchParams(location.search).get('m') ?? '' } : null;
 }
 
 /**
- * Clé de modérateur du salon dont on saisit l'intitulé : demandée au serveur (qui en garantit
- * l'empreinte), une seule fois par intitulé, après une courte pause de saisie.
+ * Moderator key of the room whose name is being typed: requested from the server (which
+ * guarantees its tag), once per name, after a short typing pause.
  */
 function useRoomKey(roomInput: string, enabled: boolean) {
   const name = enabled ? slugifyRoomId(roomInput, ROOM_NAME_MAX) : '';
@@ -87,8 +87,8 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
   const [moderator, setModerator] = useState(false);
   const roomKey = useRoomKey(roomInput, !preset);
 
-  // Lien de modérateur d'un salon existant : le serveur vérifie la clé, et on la retient pour
-  // pouvoir y recréer ce salon sous le même identifiant depuis cet appareil.
+  // Moderator link of an existing room: the server checks the key, and we keep it so the
+  // room can be recreated under the same identifier from this device.
   useEffect(() => {
     if (!preset?.mod) return;
     void getRoomInfo(preset.room, preset.mod)
@@ -100,7 +100,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
       .catch(() => setModerator(false));
   }, [preset]);
 
-  // Salon affiché sous le formulaire : son identifiant et la clé de modérateur éventuelle.
+  // Room shown under the form: its identifier and the moderator key, if any.
   const shown = preset
     ? { roomId: preset.room, mod: moderator ? preset.mod : '' }
     : roomKey.key
@@ -111,7 +111,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
     event.preventDefault();
     setError('');
     try {
-      // Clé du salon pas encore reçue : on la demande maintenant plutôt que d'attendre la pause.
+      // Room key not received yet: we ask for it now rather than wait for the pause.
       let key = roomKey.key;
       if (!preset && !key && roomKey.name) {
         setStatus('preparing');

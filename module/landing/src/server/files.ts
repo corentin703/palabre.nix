@@ -21,8 +21,8 @@ export const contentTypeOf = (file: string): string =>
   CONTENT_TYPES[path.extname(file).toLowerCase()] ?? 'application/octet-stream';
 
 /**
- * Fichiers de l'application web construite (dist/web) : servis sous /visio-assets/app/, avec des
- * noms qui changent à chaque build (hachés), donc cachés sans limite.
+ * Files of the built web application (dist/web): served under /visio-assets/app/, with
+ * names that change on every build (hashed), hence cached without limit.
  */
 export function serveBuiltAsset(res: ServerResponse, webDir: string, relativePath: string): void {
   const root = path.resolve(webDir);
@@ -38,7 +38,7 @@ export function serveBuiltAsset(res: ServerResponse, webDir: string, relativePat
   fs.createReadStream(file).pipe(res);
 }
 
-/** Fichier de l'hôte (logo, CSS) lu une fois au démarrage. */
+/** A host file (logo, CSS) read once at startup. */
 export interface LoadedFile {
   data: Buffer;
   contentType: string;

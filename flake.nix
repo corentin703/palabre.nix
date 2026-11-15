@@ -10,14 +10,14 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
 
-    # Conteneurs Podman verrouillés par digest. Pas de `follows` sur nixpkgs : voulu par
-    # pin-oci (cache binaire).
+    # Podman containers pinned by digest. No `follows` on nixpkgs: wanted by
+    # pin-oci (binary cache).
     pin-oci.url = "github:corentin703/pin-oci.nix";
   };
 
-  # Le module suppose que l'hôte fournit pin-oci. Il ne connaît aucun gestionnaire de secrets : il
-  # reçoit des chemins de fichiers (services.palabre.secrets.*). pin-oci n'est une entrée de ce
-  # flake que pour le verrouiller (`pin-oci lock --flake .#lock`) et le tester.
+  # The module expects the host to provide pin-oci. It knows no secrets manager:
+  # it takes file paths (services.palabre.secrets.*). pin-oci is an input of this
+  # flake only to lock it (`pin-oci lock --flake .#lock`) and test it.
   outputs =
     {
       self,
@@ -33,8 +33,8 @@
     in
     {
       nixosModules = {
-        # La page d'accueil vient du paquet de ce flake (construit et mis en cache par la CI) :
-        # sans cela, elle serait recompilée avec le nixpkgs de l'hôte, hors du cache.
+        # The landing page comes from this flake's package (built and cached by CI):
+        # without it, it would be rebuilt with the host's nixpkgs, outside the cache.
         palabre =
           { lib, pkgs, ... }:
           let
@@ -49,7 +49,7 @@
         default = self.nixosModules.palabre;
       };
 
-      # Configuration d'exemple : verrouille les images et sert de test d'évaluation.
+      # Example configuration: locks the images and serves as an evaluation test.
       nixosConfigurations.lock = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
@@ -78,7 +78,7 @@
         {
           landing = self.packages.x86_64-linux.palabre-landing;
 
-          # Le module s'évalue, sans assertion en échec (images verrouillées comprises).
+          # The module evaluates, with no failed assertion (locked images included).
           example-evaluates =
             let
               failed = nixpkgs.lib.filter (a: !a.assertion) config.assertions;

@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { ApiError, ErrorCode } from '../shared/api.js';
 
-/** Erreur à renvoyer au navigateur, qui traduit `code` (voir shared/api.ts). */
+/** Error to send back to the browser, which translates `code` (see shared/api.ts). */
 export class HttpError extends Error {
   constructor(
     readonly status: number,
@@ -12,9 +12,9 @@ export class HttpError extends Error {
 }
 
 /**
- * Derrière Caddy, l'adresse de la socket est toujours 127.0.0.1 : l'IP du visiteur est dans
- * X-Forwarded-For, que Caddy réécrit (le conteneur n'écoute que sur 127.0.0.1, donc l'en-tête ne
- * vient pas d'un client direct).
+ * Behind Caddy, the socket address is always 127.0.0.1: the visitor's IP is in
+ * X-Forwarded-For, which Caddy rewrites (the container only listens on 127.0.0.1, so the
+ * header does not come from a direct client).
  */
 export function getClientIp(req: IncomingMessage): string {
   const forwarded = req.headers['x-forwarded-for'];
@@ -37,7 +37,7 @@ export function readBody(req: IncomingMessage, maxBytes: number): Promise<string
   });
 }
 
-/** Corps JSON d'une requête, ou null s'il est illisible ou trop gros. */
+/** JSON body of a request, or null if unreadable or too large. */
 export async function readJson(req: IncomingMessage, maxBytes: number): Promise<unknown> {
   try {
     return JSON.parse((await readBody(req, maxBytes)) || '{}');
@@ -65,7 +65,7 @@ export function sendText(res: ServerResponse, status: number, text: string): voi
   res.end(text);
 }
 
-/** Réponse d'erreur JSON ; retourne vrai (requête traitée). */
+/** JSON error response; returns true (request handled). */
 export function sendError(res: ServerResponse, status: number, code: ErrorCode, detail?: string): true {
   const body: ApiError = detail ? { code, detail } : { code };
   sendJson(res, status, body);

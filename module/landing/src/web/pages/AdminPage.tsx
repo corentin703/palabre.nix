@@ -8,7 +8,7 @@ import '../styles/admin.css';
 
 const REFRESH_MS = 10_000;
 
-/** Date d'un salon : PlugNMeet répond en secondes depuis 1970 ou en « AAAA-MM-JJ hh:mm:ss ». */
+/** Date of a room: PlugNMeet answers in seconds since 1970 or as "YYYY-MM-DD hh:mm:ss". */
 function formatDate(value: string, locale: string): string {
   if (!value || value === '0000-00-00 00:00:00') return '';
   const date = /^[0-9]+$/.test(value) ? new Date(Number(value) * 1000) : new Date(value.replace(' ', 'T'));
@@ -48,8 +48,8 @@ export default function AdminPage({ brandName }: { brandName: string }) {
     }
   }, [t]);
 
-  // Au chargement : si une session valide existe (cookie), on affiche la liste ; sur 401 on
-  // bascule vers la connexion. Ensuite la liste se rafraîchit seule.
+  // On load: if a valid session exists (cookie), the list is shown; on 401 we switch to the
+  // login. After that the list refreshes by itself.
   useEffect(() => {
     void load();
   }, [load]);
@@ -76,7 +76,7 @@ export default function AdminPage({ brandName }: { brandName: string }) {
     setView('login');
   }
 
-  /** Appelle une action sur un salon ; une session expirée ramène à la connexion. */
+  /** Calls an action on a room; an expired session sends back to the login. */
   async function act(action: () => Promise<void>) {
     try {
       await action();
@@ -87,8 +87,8 @@ export default function AdminPage({ brandName }: { brandName: string }) {
   }
 
   function joinAsModerator(room: ActiveRoom) {
-    // L'onglet est ouvert tout de suite (clic de la personne) pour ne pas être bloqué par
-    // l'anti-popup, puis reçoit son adresse une fois le jeton prêt.
+    // The tab is opened right away (the person's click) so the popup blocker does not stop it,
+    // then receives its address once the token is ready.
     const tab = window.open('', '_blank');
     void act(async () => {
       try {

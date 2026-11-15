@@ -1,7 +1,8 @@
-# Configuration minimale, sans valeur réelle : elle ne sert qu'à verrouiller les images de
-# Palabre depuis ce dépôt (`pin-oci lock --flake .#lock`) et à vérifier que le module s'évalue.
-# Ici le projet n'a pas de `followLockFile` : ses images sont celles du `lockFile` du dépôt,
-# que `pin-oci lock` écrit. Chez un hôte, c'est ce fichier qui est lu (`followLockFile`).
+# Minimal configuration with no real value: it only exists to lock Palabre's
+# images from this repository (`pin-oci lock --flake .#lock`) and to check that
+# the module evaluates. Here the project has no `followLockFile`: its images are
+# those of the repository's `lockFile`, which `pin-oci lock` writes. On a host,
+# that file is what gets read (`followLockFile`).
 { lib, ... }:
 {
   system.stateVersion = "26.05";
@@ -30,7 +31,7 @@
     host = "visio.example.org";
     user = "oci-palabre";
     stateDir = "/srv/palabre";
-    # Fichiers fictifs : jamais lus ici (le module ne les lit qu'au démarrage du service).
+    # Placeholder files: never read here (the module only reads them when the service starts).
     secrets = lib.genAttrs [
       "livekitApiKeyFile"
       "livekitApiSecretFile"

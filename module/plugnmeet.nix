@@ -45,18 +45,17 @@ in
             allow_override: false
           bbb_join_host: "https://${cfg.host}"
           auto_client_download:
-            # L'image officielle mynaparrot/plugnmeet-server n'embarque pas le
-            # client web (aucun repo ne publie de client déjà construit) : le
-            # serveur télécharge lui-même le build officiel de plugNmeet-client
-            # à son premier démarrage, dans ${appDir}/client (persistant via le
-            # montage /app).
+            # The official mynaparrot/plugnmeet-server image does not ship the web
+            # client (no repo publishes a prebuilt client): the server downloads the
+            # official plugNmeet-client build itself on its first start, into
+            # ${appDir}/client (persistent through the /app mount).
             #
-            # from_release doit être un tag de release EXPLICITE : laisser vide
-            # ("latest") fait construire l'URL
-            # .../releases/download/latest/client.zip, qui n'existe pas (ce
-            # n'est pas le raccourci GitHub .../releases/latest/download/...) et
-            # fait planter le serveur au démarrage (404, testé en prod). On
-            # épingle sur la même version que le serveur.
+            # from_release must be an EXPLICIT release tag: leaving it empty
+            # ("latest") builds the URL
+            # .../releases/download/latest/client.zip, which does not exist (it is not
+            # GitHub's .../releases/latest/download/... shortcut) and crashes the
+            # server at startup (404, seen in production). We pin the same version as
+            # the server.
             enabled: true
             server_url: "https://${cfg.host}"
             from_release: "${serverVersion}"
@@ -128,9 +127,9 @@ in
           keep_forever: false
           allowed_types: ["jpg","png","jpeg","svg","pdf","docx","txt","xlsx","pptx","zip","mp4","webm","mp3"]
 
-        # Pas de recorder serveur : les enregistrements se font dans le
-        # navigateur (voir landing/server.js, isAllowLocal). Le serveur exige
-        # tout de même cette section ; le chemin reste dans son volume /app.
+        # No server-side recorder: recordings are made in the browser (see
+        # module/landing/src/server/join.ts, isAllowLocal). The server still
+        # requires this section; the path stays in its /app volume.
         recorder_info:
           recording_files_path: "./recording_files"
           token_validity: 30m
@@ -158,9 +157,9 @@ in
         "${cfg.rendered.plugnmeet.path}:/app/config.yaml:ro"
       ];
       extraOptions = [
-        # Réseau hôte : joint LiveKit, Redis, MariaDB et NATS (tous en
-        # host networking ou natifs sur l'hôte) sans indirection
-        # host.docker.internal, comme le déploiement officiel.
+        # Host network: reaches LiveKit, Redis, MariaDB and NATS (all in host
+        # networking or native on the host) without going through
+        # host.docker.internal, like the official deployment.
         "--network=host"
       ];
       autoStart = true;

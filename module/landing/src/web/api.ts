@@ -1,6 +1,6 @@
 import type { ApiError, ErrorCode, JoinRequest, JoinResponse, RoomInfo, RoomKey, RuntimeConfig } from '../shared/api';
 
-/** Erreur d'une réponse du serveur, ou 'network' si on n'a pas pu lui parler. */
+/** Error of a server response, or 'network' if we could not talk to it. */
 export class ApiFailure extends Error {
   constructor(
     readonly code: ErrorCode | 'network',
@@ -11,7 +11,7 @@ export class ApiFailure extends Error {
   }
 }
 
-/** Appelle l'API ; `body` est envoyé en JSON (POST). */
+/** Calls the API; `body` is sent as JSON (POST). */
 export async function request<T>(path: string, body?: unknown): Promise<T> {
   let response: Response;
   try {

@@ -1,14 +1,16 @@
-# Fichiers de configuration qui contiennent des secrets.
+# Configuration files that contain secrets.
 #
-# Le module ne connaît aucun gestionnaire de secrets : il reçoit des CHEMINS de fichiers
-# (`services.palabre.secrets.*`), que sops-nix, agenix, systemd-creds ou autre ont déposés, lisibles
-# par root. Mais LiveKit, PlugNMeet et la page d'accueil lisent leurs secrets dans leur propre
-# fichier de configuration, mêlés aux autres réglages : il faut donc produire ce fichier.
+# The module knows no secrets manager: it receives file PATHS
+# (`services.palabre.secrets.*`), put there by sops-nix, agenix, systemd-creds or
+# anything else, readable by root. But LiveKit, PlugNMeet and the landing page read
+# their secrets from their own configuration file, mixed with their other settings:
+# that file has to be produced.
 #
-# Chaque configuration est un modèle du store avec des `@NOM@` à la place des secrets. Juste
-# avant le démarrage du conteneur (`ExecStartPre`, en root), le modèle est rempli dans le dossier
-# d'exécution du conteneur (propriétaire : l'utilisateur des conteneurs, mode 0400), puis monté. Aucun
-# secret n'entre dans le store. Après un changement de secret, il suffit de redémarrer le conteneur.
+# Each configuration is a store template with `@NAME@` in place of the secrets.
+# Right before the container starts (`ExecStartPre`, as root), the template is
+# filled in the container's runtime directory (owner: the containers' user, mode
+# 0400), then mounted. No secret enters the store. After changing a secret,
+# restarting the container is enough.
 {
   config,
   lib,
@@ -19,8 +21,8 @@ let
   cfg = config.services.palabre;
   inherit (lib) mkOption types;
 
-  # Dossier d'exécution d'une unité de conteneur : `oci-containers` le crée déjà, du nom du
-  # conteneur (`podman-<conteneur>`), pour l'utilisateur de l'unité.
+  # Runtime directory of a container unit: `oci-containers` already creates it, named
+  # after the container (`podman-<container>`), for the unit's user.
   runtimeDirectory = unit: lib.removePrefix "podman-" unit;
 
   renderedFile =
@@ -49,8 +51,8 @@ let
       };
     };
 
-  # Le script d'une unité : remplit le modèle (`$1`) vers la destination (`$2`), avec les
-  # secrets `NOM=fichier` qui suivent.
+  # A unit's script: fills the template (`$1`) into the destination (`$2`), with the
+  # `NAME=file` secrets that follow.
   render = pkgs.writeShellScript "palabre-render" ''
     set -euo pipefail
     template=$1 target=$2
@@ -60,11 +62,11 @@ let
       name=''${pair%%=*}
       file=''${pair#*=}
       if [ ! -r "$file" ]; then
-        echo "palabre: le fichier de secret $file est absent ou illisible" >&2
+        echo "palabre: secret file $file is missing or unreadable" >&2
         exit 1
       fi
-      # $(<…) retire les retours à la ligne de fin ; les guillemets rendent le motif et le
-      # remplacement littéraux, quel que soit le contenu du secret.
+      # $(<…) strips trailing newlines; the quotes make the pattern and the
+      # replacement literal, whatever the content of the secret.
       secret=$(<"$file")
       content=''${content//"@$name@"/"$secret"}
     done
@@ -88,7 +90,7 @@ in
       lib.nameValuePair file.unit {
         serviceConfig = {
           RuntimeDirectory = lib.mkDefault (runtimeDirectory file.unit);
-          # `+` : en root, pour lire les secrets que l'utilisateur des conteneurs ne lit pas.
+          # `+`: as root, to read the secrets the containers' user cannot read.
           ExecStartPre = [
             "+${render} ${pkgs.writeText "palabre-${name}" file.content} ${lib.escapeShellArg file.path} ${
               lib.escapeShellArgs (lib.mapAttrsToList (secret: path: "${secret}=${path}") file.secrets)

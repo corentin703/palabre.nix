@@ -6,7 +6,7 @@ import { ConfigError, loadConfig } from './config.js';
 import { loadFile } from './files.js';
 import { createPnm } from './plugnmeet.js';
 
-/** Racine de l'application installée : dist/server/ -> .. -> .. */
+/** Root of the installed application: dist/server/ -> .. -> .. */
 const ROOT = path.resolve(import.meta.dirname, '..', '..');
 const WEB_DIR = path.join(ROOT, 'dist', 'web');
 

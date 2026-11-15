@@ -1,8 +1,8 @@
-# Palabre : visioconférence autohébergée.
+# Palabre: self-hosted video conferencing.
 #
-# PlugNMeet (interface + API) au-dessus de LiveKit (média audio/vidéo) et NATS
-# (temps réel), avec une page d'accueil publique (création/jonction de salon
-# anonyme, panneau /admin) personnalisable. Voir README.md.
+# PlugNMeet (interface + API) on top of LiveKit (audio/video media) and NATS
+# (real time), with a customizable public landing page (anonymous room
+# creation/joining, /admin panel). See README.md.
 {
   config,
   lib,
@@ -12,8 +12,9 @@
 let
   inherit (lib) mkEnableOption mkOption types;
 
-  # Chemin d'un fichier de secret, hors du store (le secret n'y entrerait pas en clair sinon).
-  # Lisible par root : le module en tire les configurations au démarrage (voir secrets.nix).
+  # Path of a secret file, outside the store (the secret would end up there in
+  # clear text otherwise). Readable by root: the module builds its configuration
+  # files from them at startup (see secrets.nix).
   secretFile = types.pathWith {
     inStore = false;
     absolute = true;
@@ -30,9 +31,9 @@ in
     ./caddy.nix
   ];
 
-  # Les images (LiveKit, PlugNMeet) sont verrouillées par le `pin-oci.lock` de ce flake, lu
-  # tel quel par l'hôte ; l'hôte peut le surcharger (`followLockFile = null` pour les
-  # verrouiller avec les siennes). Voir README.md.
+  # The images (LiveKit, PlugNMeet) are pinned by this flake's `pin-oci.lock`, read
+  # as is by the host; the host can override it (`followLockFile = null` to pin
+  # them with its own). See README.md.
   config = lib.mkIf config.services.palabre.enable {
     virtualisation.pin-oci.projects.palabre.followLockFile = lib.mkDefault ../pin-oci.lock;
   };

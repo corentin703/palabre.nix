@@ -33,7 +33,7 @@ in
       '';
     };
 
-    # Projet "palabre" (livekit + plugnmeet) : cible podman-palabre.target.
+    # Project "palabre" (livekit + plugnmeet): target podman-palabre.target.
     virtualisation.pin-oci.projects.palabre.enable = true;
 
     virtualisation.pin-oci.projects.palabre.services.livekit-server = {
@@ -47,15 +47,15 @@ in
         "/etc/livekit.yaml"
       ];
       extraOptions = [
-        # Host networking : la plage RTC (10000+ ports UDP) ne peut pas
-        # raisonnablement être publiée port par port via `-p`. C'est aussi le
-        # déploiement recommandé par LiveKit pour un nœud unique.
+        # Host networking: the RTC range (10000+ UDP ports) cannot reasonably
+        # be published port by port with `-p`. It is also what LiveKit
+        # recommends for a single node.
         "--network=host"
       ];
       autoStart = true;
     };
 
-    # Redis natif (voir redis.nix), pas un conteneur.
+    # Native Redis (see redis.nix), not a container.
     systemd.services.podman-palabre-livekit-server = {
       after = [ "redis-palabre.service" ];
       requires = [ "redis-palabre.service" ];
@@ -71,12 +71,11 @@ in
       allowedTCPPorts = [
         rtcTcpPort
       ];
-      # Le port HTTP/WS principal (cfg.port) n'est volontairement PAS ouvert ici :
-      # avec `--network=host`, il est bindé directement sur l'hôte, mais ne doit
-      # être joignable qu'en local (127.0.0.1) depuis Caddy, jamais directement
-      # depuis Internet (voir `caddyHandles`). Le
-      # pare-feu deny-by-default sur eth0 s'en charge : on n'ajoute cfg.port à
-      # aucune liste `allowed*Ports`.
+      # The main HTTP/WS port (cfg.port) is deliberately NOT opened here:
+      # with `--network=host` it is bound directly on the host, but must only
+      # be reachable locally (127.0.0.1) from Caddy, never directly from the
+      # Internet (see `caddyHandles`). The deny-by-default firewall on eth0
+      # takes care of it: cfg.port is added to no `allowed*Ports` list.
     };
   };
 }

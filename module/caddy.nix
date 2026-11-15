@@ -3,13 +3,13 @@ let
   cfg = config.services.palabre;
 in
 {
-  # PlugNMeet est servi sur un seul domaine mais parle à 3 autres backends
-  # (LiveKit, NATS en WebSocket, page d'accueil) : routage par chemin, comme
-  # le haproxy de l'installeur officiel mynaparrot/plugNmeet-install.
+  # PlugNMeet is served on a single domain but talks to 3 other backends
+  # (LiveKit, NATS over WebSocket, the landing page): path-based routing,
+  # like the official installer's haproxy (mynaparrot/plugNmeet-install).
   config.services.palabre.caddyHandles = ''
-    # `handle_path`/`handle` n'acceptent qu'un seul motif de chemin en
-    # argument inline : il faut un matcher nommé pour couvrir le chemin nu ET
-    # ses sous-chemins.
+    # `handle_path`/`handle` only accept one path pattern as an inline
+    # argument: a named matcher is needed to cover the bare path AND its
+    # subpaths.
     @livekit path /livekit /livekit/*
     handle @livekit {
         uri strip_prefix /livekit
@@ -22,15 +22,15 @@ in
         reverse_proxy http://127.0.0.1:${toString cfg.ports.natsWebsocket}
     }
 
-    # Page d'accueil : création/jonction de salon, panneau /admin et leurs
-    # ressources (/visio-assets, /visio-api : /assets et /api sont pris par
-    # le client PlugNMeet).
+    # Landing page: room creation/joining, the /admin panel and their
+    # resources (/visio-assets, /visio-api: /assets and /api belong to the
+    # PlugNMeet client).
     @landing path /join /join/* /r/* /admin /admin/* /visio-assets/* /visio-api/*
     handle @landing {
         reverse_proxy http://127.0.0.1:${toString cfg.ports.landing}
     }
 
-    # La racine sans `access_token` est aussi la page d'accueil.
+    # The root without `access_token` is the landing page too.
     @landingRoot {
         path /
         not query access_token=*

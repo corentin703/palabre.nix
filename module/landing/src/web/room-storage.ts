@@ -1,7 +1,7 @@
 import type { RoomKey } from '../shared/api';
 
-// Ce que l'on retient sur cet appareil. localStorage peut être indisponible (navigation privée) :
-// tout est alors perdu à la fermeture de la page, sans autre conséquence.
+// What we remember on this device. localStorage may be unavailable (private browsing):
+// everything is then lost when the page closes, with no other consequence.
 
 const ROOMS_KEY = 'visio:rooms';
 const HISTORY_KEY = 'visio:history';
@@ -21,11 +21,11 @@ function write(key: string, value: unknown): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Voir plus haut.
+    // See above.
   }
 }
 
-// --- Clés des salons créés ou ouverts en modérateur sur cet appareil ---------------------------
+// // --- Keys of the rooms created or opened as a moderator on this device ------------------------
 
 const memory: Record<string, RoomKey> = {};
 
@@ -38,12 +38,12 @@ export function saveRoomKey(name: string, key: RoomKey): void {
   write(ROOMS_KEY, { ...read<Record<string, RoomKey>>(ROOMS_KEY, {}), [name]: key });
 }
 
-// --- Historique des réunions --------------------------------------------------------------------
+// // --- History of the meetings ------------------------------------------------------------------
 
 export interface HistoryItem {
   slug: string;
   title: string;
-  /** Clé de modérateur : le lien de l'historique redonne ses droits d'un clic. */
+  /** Moderator key: the history link gets the rights back in one click. */
   mod: string;
   at: number;
 }
@@ -61,7 +61,7 @@ export function clearHistory(): void {
   write(HISTORY_KEY, []);
 }
 
-// --- Prénom -------------------------------------------------------------------------------------
+// // --- First name -------------------------------------------------------------------------------
 
 export const loadName = (): string => read<string>(NAME_KEY, '');
 export const saveName = (name: string): void => write(NAME_KEY, name);

@@ -8,7 +8,7 @@ import { createApp } from './app';
 import { loadConfig } from './config';
 import type { PnmApi } from './plugnmeet';
 
-// Le serveur complet, avec un faux PlugNMeet : on regarde ce qu'il lui demande et ce qu'il répond.
+// The whole server, with a fake PlugNMeet: we look at what it asks it and what it answers.
 
 const calls: { tokens: { roomId: string; isAdmin: boolean }[]; created: string[] } = { tokens: [], created: [] };
 
@@ -74,8 +74,8 @@ beforeEach(async () => {
 
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
 
-describe('fichiers et pages', () => {
-  it('sert la configuration de la page', async () => {
+describe('files and pages', () => {
+  it('serves the page configuration', async () => {
     expect(await (await fetch(`${base}/visio-api/config`)).json()).toEqual({
       defaultLocale: 'fr',
       brandName: 'Mon organisation',
@@ -87,7 +87,7 @@ describe('fichiers et pages', () => {
     expect((await fetch(`${base}/visio-assets/logo`)).status).toBe(404);
   });
 
-  it('sert l’application web pour l’accueil, un salon et l’administration', async () => {
+  it('serves the web application for the home page, a room and the administration', async () => {
     for (const url of ['/', '/join', '/r/demo-d573b9b5fb90', '/admin']) {
       const response = await fetch(base + url);
       expect(response.status, url).toBe(200);
@@ -95,32 +95,32 @@ describe('fichiers et pages', () => {
     }
   });
 
-  it('ne laisse pas partir la clé de modérateur en Referer, ni indexer /admin', async () => {
+  it('does not leak the moderator key in the Referer, nor let /admin be indexed', async () => {
     const room = await fetch(`${base}/r/demo-d573b9b5fb90?m=${'a'.repeat(32)}`);
     expect(room.headers.get('referrer-policy')).toBe('no-referrer');
     expect((await fetch(`${base}/admin`)).headers.get('x-robots-tag')).toContain('noindex');
   });
 
-  it('renvoie à l’accueil un lien de salon invalide', async () => {
+  it('redirects an invalid room link to the home page', async () => {
     const response = await fetch(`${base}/r/!!!`, { redirect: 'manual' });
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe('/');
   });
 
-  it('sert les fichiers construits sans sortir de leur dossier', async () => {
+  it('serves the built files without leaving their folder', async () => {
     expect((await fetch(`${base}/visio-assets/app/assets/app.js`)).status).toBe(200);
     expect((await fetch(`${base}/visio-assets/app/assets/absent.js`)).status).toBe(404);
     const escape = await fetch(`${base}/visio-assets/app/%2e%2e/%2e%2e/etc/passwd`);
     expect(escape.status).toBe(404);
   });
 
-  it('répond 404 ailleurs', async () => {
+  it('answers 404 elsewhere', async () => {
     expect((await fetch(`${base}/nimporte-quoi`)).status).toBe(404);
   });
 });
 
 describe('POST /visio-api/join', () => {
-  it('crée le salon et rend l’adresse de la réunion, dans la langue demandée', async () => {
+  it('creates the room and returns the meeting address, in the requested language', async () => {
     const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
     const response = await postJson('/visio-api/join', { room: 'Réunion Bureau', name: 'Camille', mod, locale: 'en' });
     const { url } = (await response.json()) as { url: string };
@@ -131,7 +131,7 @@ describe('POST /visio-api/join', () => {
     expect(calls.tokens).toEqual([{ roomId: `reunion-bureau-${tag}`, isAdmin: true }]);
   });
 
-  it('ne fait modérateur que celui qui présente la clé du salon', async () => {
+  it('only makes a moderator of whoever presents the room’s key', async () => {
     const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
     const room = `salon-${tag}`;
     const other = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string };
@@ -143,21 +143,21 @@ describe('POST /visio-api/join', () => {
     expect(calls.tokens.map((t) => t.isAdmin)).toEqual([true, false, false]);
   });
 
-  it('refuse un intitulé inutilisable et une requête mal formée, avec un code à traduire', async () => {
+  it('refuses an unusable name and a malformed request, with a code to translate', async () => {
     const invalid = await postJson('/visio-api/join', { room: '!!!', name: 'x', mod: '', locale: 'fr' });
     expect([invalid.status, await invalid.json()]).toEqual([400, { code: 'invalid_room' }]);
     const malformed = await postJson('/visio-api/join', { name: 'x' });
     expect([malformed.status, await malformed.json()]).toEqual([400, { code: 'invalid_request' }]);
   });
 
-  it('signale un échec de PlugNMeet par un code, sans détail technique', async () => {
-    vi.mocked(pnm.isRoomActive).mockRejectedValueOnce(new Error('connexion refusée'));
+  it('reports a PlugNMeet failure with a code, without technical details', async () => {
+    vi.mocked(pnm.isRoomActive).mockRejectedValueOnce(new Error('connection refused'));
     vi.spyOn(console, 'error').mockImplementationOnce(() => undefined);
     const response = await postJson('/visio-api/join', { room: 'salon', name: 'x', mod: '', locale: 'fr' });
     expect([response.status, await response.json()]).toEqual([502, { code: 'join_failed' }]);
   });
 
-  it('limite le nombre de tentatives par IP', async () => {
+  it('limits the number of attempts per IP', async () => {
     const statuses: number[] = [];
     for (let i = 0; i < 12; i++) {
       statuses.push((await postJson('/visio-api/join', { room: '!!!' })).status);
@@ -168,7 +168,7 @@ describe('POST /visio-api/join', () => {
 });
 
 describe('GET /visio-api/room-info', () => {
-  it('vérifie que la clé est bien celle du salon', async () => {
+  it('checks that the key is the room’s key', async () => {
     const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
     const info = async (m: string) => (await fetch(`${base}/visio-api/room-info?room=demo-${tag}&m=${m}`)).json();
     expect(await info(mod)).toEqual({ room: `demo-${tag}`, label: 'demo', moderator: true });
@@ -177,15 +177,15 @@ describe('GET /visio-api/room-info', () => {
   });
 });
 
-describe('administration', () => {
+describe('administration panel', () => {
   const login = (token: string, headers: Record<string, string> = {}) => postJson('/admin/login', { token }, headers);
 
-  it('exige une session pour l’API', async () => {
+  it('requires a session for the API', async () => {
     const response = await fetch(`${base}/admin/api/rooms`);
     expect([response.status, await response.json()]).toEqual([401, { code: 'unauthorized' }]);
   });
 
-  it('échange le jeton contre un cookie de session, qui ouvre l’API', async () => {
+  it('exchanges the token for a session cookie, which opens the API', async () => {
     expect(await (await login('mauvais')).json()).toEqual({ code: 'bad_token' });
     const ok = await login('admin-token');
     expect(ok.status).toBe(200);
@@ -199,20 +199,20 @@ describe('administration', () => {
     expect(forged.status).toBe(401);
   });
 
-  it('refuse une requête qui modifie sans être du JSON de ce même site', async () => {
+  it('refuses a request that changes something without being JSON from this same site', async () => {
     const wrongType = await fetch(`${base}/admin/login`, { method: 'POST', body: '{}' });
     expect(wrongType.status).toBe(400);
     const wrongOrigin = await login('admin-token', { Origin: 'https://autre.example' });
     expect(wrongOrigin.status).toBe(400);
   });
 
-  it('bloque après trop d’essais ratés', async () => {
+  it('blocks after too many failed attempts', async () => {
     const codes: number[] = [];
     for (let i = 0; i < 6; i++) codes.push((await login('mauvais')).status);
     expect(codes).toEqual([401, 401, 401, 401, 401, 429]);
   });
 
-  it('est désactivée sans jeton', async () => {
+  it('is disabled without a token', async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     await start({ ADMIN_TOKEN: '' });
     expect((await fetch(`${base}/admin`)).status).toBe(404);

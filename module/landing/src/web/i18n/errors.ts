@@ -1,7 +1,7 @@
 import { ApiFailure } from '../api';
 import type { Messages } from './fr';
 
-/** Message d'une erreur de l'API, dans la langue de la personne. */
+/** Message of an API error, in the visitor's language. */
 export function errorMessage(t: Messages, error: unknown): string {
   if (!(error instanceof ApiFailure)) return t.errors.network;
   if (error.code === 'network') return t.errors.network;

@@ -1,10 +1,10 @@
-/** Contrat JSON entre l'application web (navigateur) et le serveur. */
+/** JSON contract between the web application (browser) and the server. */
 
 import type { Locale } from './locales.js';
 
 /**
- * Les erreurs du serveur sont des codes : c'est le navigateur qui les traduit
- * (web/i18n, `errors`), dans la langue de la personne.
+ * Server errors are codes: it is the browser that translates them
+ * (web/i18n, `errors`), in the visitor's language.
  */
 export type ErrorCode =
   | 'invalid_request'
@@ -19,13 +19,13 @@ export type ErrorCode =
 
 export interface ApiError {
   code: ErrorCode;
-  /** Message technique de PlugNMeet (`plugnmeet_failed`), tel quel. */
+  /** Technical message from PlugNMeet (`plugnmeet_failed`), as is. */
   detail?: string;
 }
 
-/** Personnalisation de la page (services.palabre.landing.*). */
+/** Page customization (services.palabre.landing.*). */
 export interface RuntimeConfig {
-  /** Langue quand rien ne dit celle de la personne (services.palabre.landing.defaultLocale). */
+  /** Language when nothing says which one the visitor wants (services.palabre.landing.defaultLocale). */
   defaultLocale: Locale;
   brandName: string;
   themeColor: string;
@@ -33,33 +33,33 @@ export interface RuntimeConfig {
   hasCustomCss: boolean;
 }
 
-/** Clé de modérateur d'un nouveau salon et empreinte publique qui l'identifie. */
+/** Moderator key of a new room, and the public tag that identifies it. */
 export interface RoomKey {
   mod: string;
   tag: string;
 }
 
 export interface RoomInfo {
-  /** Identifiant du salon, tel que le serveur l'a normalisé. */
+  /** Room identifier, as normalized by the server. */
   room: string;
-  /** Nom lisible, sans l'empreinte. */
+  /** Readable name, without the tag. */
   label: string;
-  /** La clé fournie est bien celle de ce salon. */
+  /** The given key is the key of this room. */
   moderator: boolean;
 }
 
 export interface JoinRequest {
-  /** Intitulé saisi, ou identifiant d'un salon existant. */
+  /** Name typed by the visitor, or identifier of an existing room. */
   room: string;
   name: string;
-  /** Clé de modérateur ; vide pour un simple participant. */
+  /** Moderator key; empty for a regular participant. */
   mod: string;
-  /** Langue de la personne : message de bienvenue du salon et langue de la réunion. */
+  /** Visitor's language: the room's welcome message and the language of the meeting. */
   locale: Locale;
 }
 
 export interface JoinResponse {
-  /** Adresse de la réunion PlugNMeet, jeton compris. */
+  /** Address of the PlugNMeet meeting, token included. */
   url: string;
 }
 

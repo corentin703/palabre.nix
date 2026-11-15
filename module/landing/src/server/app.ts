@@ -15,9 +15,9 @@ import { RateLimiter } from './window-counter.js';
 export interface AppDeps {
   config: Config;
   pnm: PnmApi;
-  /** `index.html` de l'application web construite. */
+  /** `index.html` of the built web application. */
   indexHtml: Buffer;
-  /** Dossier de l'application web construite (dist/web). */
+  /** Folder of the built web application (dist/web). */
   webDir: string;
   logo: LoadedFile | undefined;
   customCss: LoadedFile | undefined;
@@ -26,14 +26,14 @@ export interface AppDeps {
 const APP_PREFIX = '/visio-assets/app/';
 const RATE_WINDOW_MS = 5 * 60 * 1000;
 
-/** Les routes du serveur : l'API JSON, les fichiers, et l'application web pour les pages. */
+/** The server's routes: the JSON API, the files, and the web application for the pages. */
 export function createApp({ config, pnm, indexHtml, webDir, logo, customCss }: AppDeps): RequestListener {
   const keys = createRoomKeys(config.plugnmeetSecret);
   const joinLimiter = new RateLimiter(RATE_WINDOW_MS, 10);
-  // Limiteur séparé pour la création de clés (une par nouvel intitulé saisi).
+  // Separate limiter for key creation (one per new room name typed).
   const keyLimiter = new RateLimiter(RATE_WINDOW_MS, 60);
   const admin = config.adminToken ? createAdminHandler({ pnm, config, adminToken: config.adminToken }) : null;
-  if (!admin) console.warn('ADMIN_TOKEN absent : panneau /admin désactivé');
+  if (!admin) console.warn('ADMIN_TOKEN is not set: the /admin panel is disabled');
 
   const runtimeConfig: RuntimeConfig = {
     defaultLocale: config.defaultLocale,
@@ -43,7 +43,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss }: A
     hasCustomCss: customCss !== undefined,
   };
 
-  /** La page de l'application web : c'est elle qui lit l'adresse pour savoir quoi afficher. */
+  /** The web application's page: it reads the address to know what to show. */
   const sendApp = (res: ServerResponse, headers: Record<string, string> = {}): void => {
     sendFile(res, { data: indexHtml, contentType: 'text/html; charset=utf-8' }, headers);
   };
@@ -61,7 +61,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss }: A
     sendJson(res, 200, await joinRoom(request, { pnm, config, keys }));
   }
 
-  /** Salon d'un lien /r/<salon>?m=<clé> : l'empreinte de la clé doit être celle du salon. */
+  /** Room of a /r/<room>?m=<key> link: the key's tag must be the room's tag. */
   function roomInfo(url: URL): RoomInfo | null {
     const room = slugifyRoomId(url.searchParams.get('room') ?? '');
     if (!room) return null;
@@ -75,7 +75,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss }: A
     const { pathname } = url;
     const get = req.method === 'GET';
 
-    // Panneau d'administration : l'API d'abord, puis la page (l'application web).
+    // Administration panel: the API first, then the page (the web application).
     if (pathname === '/admin' || pathname.startsWith('/admin/')) {
       if (!admin) return void sendText(res, 404, 'Not found');
       if (await admin(req, res, pathname)) return;
@@ -106,7 +106,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss }: A
     }
     if (req.method === 'POST' && pathname === '/visio-api/join') return joinApi(req, res);
 
-    // Pages : l'accueil, et un salon (lien partageable ou lien de modérateur).
+    // Pages: the home page, and a room (shareable link or moderator link).
     if (get && (pathname === '/' || pathname === '/join')) {
       return sendApp(res, { 'Cache-Control': 'no-cache' });
     }
@@ -116,7 +116,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss }: A
         res.writeHead(302, { Location: '/' });
         return void res.end();
       }
-      // La clé de modérateur est dans l'adresse : elle ne doit pas partir en Referer.
+      // The moderator key is in the address: it must not leave in the Referer.
       return sendApp(res, { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
     }
 

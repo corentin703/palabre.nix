@@ -1,4 +1,4 @@
-/** Compteur par clé (une IP) sur une fenêtre de temps fixe. */
+/** Counter per key (an IP) over a fixed time window. */
 export class WindowCounter {
   private readonly entries = new Map<string, { count: number; resetAt: number }>();
 
@@ -7,7 +7,7 @@ export class WindowCounter {
     private readonly now: () => number = Date.now,
   ) {}
 
-  /** Compte un événement et retourne le total de la fenêtre en cours (1 pour le premier). */
+  /** Counts an event and returns the total of the current window (1 for the first). */
   increment(key: string): number {
     const now = this.now();
     const entry = this.entries.get(key);
@@ -19,7 +19,7 @@ export class WindowCounter {
     return entry.count;
   }
 
-  /** Total de la fenêtre en cours, sans rien compter. */
+  /** Total of the current window, without counting anything. */
   peek(key: string): number {
     const entry = this.entries.get(key);
     return !entry || this.now() > entry.resetAt ? 0 : entry.count;
@@ -31,9 +31,9 @@ export class WindowCounter {
 }
 
 /**
- * Au plus `max` événements par clé et par fenêtre. Anti-abus minimal : un salon PlugNMeet
- * consomme de vraies ressources (salle LiveKit). Ce n'est pas une protection contre un attaquant
- * distribué, juste un frein au spam trivial.
+ * At most `max` events per key and per window. Minimal anti-abuse: a PlugNMeet room uses
+ * real resources (a LiveKit room). This is not a protection against a distributed
+ * attacker, just a brake on trivial spam.
  */
 export class RateLimiter {
   private readonly counter: WindowCounter;
@@ -46,7 +46,7 @@ export class RateLimiter {
     this.counter = new WindowCounter(windowMs, now);
   }
 
-  /** Compte un événement ; vrai s'il dépasse la limite. */
+  /** Counts an event; true if it goes over the limit. */
   hit(key: string): boolean {
     return this.counter.increment(key) > this.max;
   }

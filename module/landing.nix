@@ -23,11 +23,10 @@ let
     ];
     config = {
       Cmd = [ "${palabre-landing}/bin/palabre-landing" ];
-      # Sans ça, axios (utilisé par plugnmeet-sdk-js pour appeler l'API
-      # PlugNMeet en HTTPS) échoue avec "unable to get local issuer
-      # certificate" -- une image dockerTools minimale n'a pas de magasin de
-      # certs CA au chemin où Node.js/OpenSSL les cherche par défaut (vu en
-      # prod).
+      # Without this, axios (used by plugnmeet-sdk-js to call the PlugNMeet
+      # API over HTTPS) fails with "unable to get local issuer certificate":
+      # a minimal dockerTools image has no CA store where Node.js/OpenSSL
+      # look for it by default (seen in production).
       Env = [
         "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
         "NODE_EXTRA_CA_CERTS=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
@@ -35,8 +34,8 @@ let
     };
   };
 
-  # Personnalisation : fichiers du store montés en lecture seule dans le
-  # conteneur (l'image ne contient que l'application).
+  # Customization: store files mounted read-only in the container (the
+  # image only holds the application).
   cssFile = pkgs.writeText "palabre-landing.css" lcfg.css;
   hasCss = lib.trim lcfg.css != "";
   logoExt = lib.last (lib.splitString "." (baseNameOf (toString lcfg.logo)));
@@ -69,8 +68,8 @@ in
       imageStream = palabre-landing-image;
       podman.user = ociUser;
       environment = {
-        # Valeur hors du fichier d'environnement : pas secrète, et peut contenir des
-        # caractères que ce format n'aime pas.
+        # Value kept out of the environment file: it is not secret, and may
+        # contain characters this format does not like.
         LANDING_BRAND_NAME = lcfg.brandName;
       }
       // lib.optionalAttrs hasCss { LANDING_CSS_FILE = "/etc/palabre/custom.css"; }
@@ -81,8 +80,8 @@ in
       volumes =
         lib.optional hasCss "${cssFile}:/etc/palabre/custom.css:ro"
         ++ lib.optional (lcfg.logo != null) "${lcfg.logo}:${logoTarget}:ro";
-      # Réseau hôte : le conteneur rootless (pasta) ne joint pas l'IP publique
-      # de l'hôte (ECONNREFUSED), et doit atteindre PlugNMeet en local.
+      # Host network: the rootless container (pasta) cannot reach the host's
+      # public IP (ECONNREFUSED), and has to reach PlugNMeet locally.
       extraOptions = [ "--network=host" ];
       autoStart = true;
     };

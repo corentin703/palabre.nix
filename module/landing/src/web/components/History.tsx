@@ -6,7 +6,7 @@ interface Props {
   onClear(): void;
 }
 
-/** Les dernières réunions de cet appareil ; le lien garde la clé de modérateur. */
+/** The latest meetings of this device; the link keeps the moderator key. */
 export function History({ items, onClear }: Props) {
   const { t, locale } = useI18n();
   if (items.length === 0) return null;

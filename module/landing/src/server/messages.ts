@@ -1,7 +1,7 @@
 import type { Locale } from '../shared/locales.js';
 
-// Les seuls textes que le serveur écrit lui-même : ils partent dans PlugNMeet, pas dans la page.
-// Tout le reste de l'interface est traduit dans le navigateur (web/i18n).
+// The only texts the server writes itself: they go to PlugNMeet, not to the page.
+// All the rest of the interface is translated in the browser (web/i18n).
 
 const GUEST_NAME: Record<Locale, string> = {
   fr: 'Invité',

@@ -2,7 +2,7 @@
   "name": "palabre-landing",
   "version": "1.0.0",
   "private": true,
-  "description": "Page d'accueil publique (creation/jonction de salon anonyme) pour PlugNMeet (Palabre)",
+  "description": "Public landing page (anonymous room creation/joining) for PlugNMeet (Palabre)",
   "license": "MIT",
   "main": "dist/server/main.js",
   "scripts": {
