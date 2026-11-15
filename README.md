@@ -17,7 +17,7 @@ NixOS module: `services.palabre`, exposed by this flake as `nixosModules.palabre
 - a way to put secrets in files readable by root, whatever it is (sops-nix, agenix, systemd
   credentials...): the module only takes file paths, see `secrets.*`;
 - a system user for rootless Podman (`linger`, subuid/subgid, home): option `user`;
-- a MySQL/MariaDB database (name, user and password in sops secrets);
+- a MySQL/MariaDB database (name, user and password in files, see `database.*File`);
 - a reverse proxy serving `host` over HTTPS, with `services.palabre.caddyHandles` in its vhost;
   the vhost must allow camera, microphone and screen sharing (`Permissions-Policy`).
 
