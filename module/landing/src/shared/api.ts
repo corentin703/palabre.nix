@@ -31,6 +31,8 @@ export interface RuntimeConfig {
   themeColor: string;
   hasLogo: boolean;
   hasCustomCss: boolean;
+  /** The installable app is enabled (services.palabre.landing.pwa.enable). */
+  pwa: boolean;
 }
 
 /** Moderator key of a new room, and the public tag that identifies it. */

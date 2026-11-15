@@ -4,6 +4,7 @@ import type { RoomKey, RuntimeConfig } from '../../shared/api';
 import { ROOM_ID_RE, ROOM_NAME_MAX, slugifyRoomId } from '../../shared/slug';
 import { getRoomInfo, getRoomKey, joinRoom } from '../api';
 import { Guide } from '../components/Guide';
+import { InstallBanner } from '../components/InstallBanner';
 import { History } from '../components/History';
 import { ShareLinks } from '../components/ShareLinks';
 import { LocaleSwitcher, useI18n } from '../i18n';
@@ -158,6 +159,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
             {error}
           </p>
         )}
+        {config.pwa && <InstallBanner />}
         {preset && moderator && <p className="banner">{t.join.moderatorBanner}</p>}
 
         <form id="join-form" onSubmit={submit}>

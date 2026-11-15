@@ -3,6 +3,13 @@ import type { Messages } from './fr';
 export const en: Messages = {
   localeName: 'English',
 
+  install: {
+    title: 'Install the app',
+    text: 'Install this app on your device to open it faster.',
+    action: 'Install',
+    dismiss: 'Not now',
+  },
+
   join: {
     titleNew: 'Video conference',
     titleExisting: 'Join the video conference',

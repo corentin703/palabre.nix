@@ -19,6 +19,10 @@ export interface Config {
   defaultLocale: Locale;
   brandName: string;
   themeColor: string;
+  /** Installed app: short name (home screen) and splash screen color. */
+  pwa: boolean;
+  shortName: string | undefined;
+  backgroundColor: string;
   cssFile: string | undefined;
   logoFile: string | undefined;
 }
@@ -32,6 +36,14 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   if (!plugnmeetHost || !plugnmeetApiKey || !plugnmeetSecret) {
     throw new ConfigError('PLUGNMEET_HOST, PLUGNMEET_API_KEY and PLUGNMEET_SECRET are required');
   }
+  if (env['LANDING_PWA'] === '1' && !env['LANDING_LOGO_FILE']) {
+    throw new ConfigError('LANDING_PWA=1 requires LANDING_LOGO_FILE: the app icons are made from it');
+  }
+  const backgroundColor = env['LANDING_BACKGROUND_COLOR'] || '#ffffff';
+  // Handed to ImageMagick: only a hexadecimal color is accepted.
+  if (!/^#[0-9a-f]{3,8}$/i.test(backgroundColor)) {
+    throw new ConfigError('LANDING_BACKGROUND_COLOR must be a hexadecimal color such as #ffffff');
+  }
   return {
     port: Number(env['PORT']) || 3000,
     bindHost: env['BIND_HOST'] || '0.0.0.0',
@@ -43,6 +55,9 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     defaultLocale: isLocale(env['LANDING_DEFAULT_LOCALE']) ? env['LANDING_DEFAULT_LOCALE'] : 'fr',
     brandName: env['LANDING_BRAND_NAME'] || 'Visioconférence',
     themeColor: env['LANDING_THEME_COLOR'] || '#1f3a5f',
+    pwa: env['LANDING_PWA'] === '1',
+    shortName: env['LANDING_SHORT_NAME'] || undefined,
+    backgroundColor,
     cssFile: env['LANDING_CSS_FILE'] || undefined,
     logoFile: env['LANDING_LOGO_FILE'] || undefined,
   };

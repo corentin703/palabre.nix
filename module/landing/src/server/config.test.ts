@@ -28,3 +28,16 @@ describe('loadConfig', () => {
     expect(loadConfig({ ...required, LANDING_DEFAULT_LOCALE: 'de' }).defaultLocale).toBe('fr');
   });
 });
+
+describe('PWA settings', () => {
+  const base = { PLUGNMEET_HOST: 'https://v.example', PLUGNMEET_API_KEY: 'k', PLUGNMEET_SECRET: 's' };
+
+  it('requires a logo', () => {
+    expect(() => loadConfig({ ...base, LANDING_PWA: '1' })).toThrow('LANDING_LOGO_FILE');
+    expect(loadConfig({ ...base, LANDING_PWA: '1', LANDING_LOGO_FILE: '/l.png' }).pwa).toBe(true);
+  });
+
+  it('only accepts a hexadecimal background color', () => {
+    expect(() => loadConfig({ ...base, LANDING_BACKGROUND_COLOR: '-write /x' })).toThrow('hexadecimal');
+  });
+});

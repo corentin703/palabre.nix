@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import type { IncomingMessage, RequestListener, ServerResponse } from 'node:http';
 import type { JoinRequest, RoomInfo, RuntimeConfig } from '../shared/api.js';
 import { isLocale } from '../shared/locales.js';
@@ -5,6 +7,8 @@ import { MOD_KEY_RE, ROOM_ID_RE, slugifyRoomId } from '../shared/slug.js';
 import { createAdminHandler } from './admin.js';
 import type { Config } from './config.js';
 import { sendFile, serveBuiltAsset } from './files.js';
+import { PWA_ICON_PREFIX, buildManifest } from './pwa.js';
+import type { PwaIcons } from './pwa.js';
 import type { LoadedFile } from './files.js';
 import { HttpError, getClientIp, readJson, sendError, sendJson, sendText } from './http.js';
 import { joinRoom } from './join.js';
@@ -21,13 +25,15 @@ export interface AppDeps {
   webDir: string;
   logo: LoadedFile | undefined;
   customCss: LoadedFile | undefined;
+  /** Icons of the installed app (PWA), made from the logo; present when the PWA is enabled. */
+  pwaIcons?: PwaIcons;
 }
 
 const APP_PREFIX = '/visio-assets/app/';
 const RATE_WINDOW_MS = 5 * 60 * 1000;
 
 /** The server's routes: the JSON API, the files, and the web application for the pages. */
-export function createApp({ config, pnm, indexHtml, webDir, logo, customCss }: AppDeps): RequestListener {
+export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwaIcons }: AppDeps): RequestListener {
   const keys = createRoomKeys(config.plugnmeetSecret);
   const joinLimiter = new RateLimiter(RATE_WINDOW_MS, 10);
   // Separate limiter for key creation (one per new room name typed).
@@ -41,6 +47,12 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss }: A
     themeColor: config.themeColor,
     hasLogo: logo !== undefined,
     hasCustomCss: customCss !== undefined,
+    pwa: config.pwa && pwaIcons !== undefined,
+  };
+
+  const manifestFile: LoadedFile = {
+    data: Buffer.from(JSON.stringify(buildManifest(config))),
+    contentType: 'application/manifest+json; charset=utf-8',
   };
 
   /** The web application's page: it reads the address to know what to show. */
@@ -89,6 +101,25 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss }: A
     }
     if (get && pathname === '/visio-assets/logo' && logo) {
       return sendFile(res, logo, { 'Cache-Control': 'public, max-age=86400' });
+    }
+    // PWA (when enabled by the module): manifest, icons, and the service worker, served from
+    // outside /visio-assets/app/ (not cached for good) and allowed to control the whole site.
+    if (runtimeConfig.pwa && get && pathname === '/visio-assets/manifest.webmanifest') {
+      return sendFile(res, manifestFile, { 'Cache-Control': 'no-cache' });
+    }
+    if (runtimeConfig.pwa && get && pathname.startsWith(PWA_ICON_PREFIX)) {
+      const icon = await pwaIcons?.get(pathname.slice(PWA_ICON_PREFIX.length));
+      if (!icon) return void sendText(res, 404, 'Not found');
+      return sendFile(res, icon, { 'Cache-Control': 'public, max-age=86400' });
+    }
+    if (runtimeConfig.pwa && get && pathname === '/visio-assets/sw.js') {
+      const worker = path.join(webDir, 'sw.js');
+      if (!fs.existsSync(worker)) return void sendText(res, 404, 'Not found');
+      return sendFile(
+        res,
+        { data: fs.readFileSync(worker), contentType: 'text/javascript; charset=utf-8' },
+        { 'Cache-Control': 'no-cache', 'Service-Worker-Allowed': '/' },
+      );
     }
     if (get && pathname === '/visio-assets/custom.css' && customCss) {
       return sendFile(res, customCss, { 'Cache-Control': 'no-cache' });

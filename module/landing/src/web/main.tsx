@@ -23,6 +23,8 @@ async function start() {
   const config = await getRuntimeConfig();
   const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
 
+  if (config.pwa && !isAdmin) window.addEventListener('load', registerServiceWorker);
+
   const page = await loadPage(config, isAdmin);
   // The administration panel keeps its neutral style.
   await applyRuntimeConfig(config, { customCss: !isAdmin });
@@ -34,4 +36,13 @@ async function start() {
   );
 }
 
+/** Installable app (when enabled by the module; never on the admin panel). */
+function registerServiceWorker(): void {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker
+    .register('/visio-assets/sw.js', { scope: '/' })
+    .catch((err: unknown) => console.warn('service worker not registered:', err));
+}
+
 void start();
+

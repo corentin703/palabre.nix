@@ -3,6 +3,7 @@
   buildNpmPackage,
   nodejs,
   makeWrapper,
+  imagemagick,
 }:
 buildNpmPackage {
   pname = "palabre-landing";
@@ -50,6 +51,7 @@ buildNpmPackage {
 
     makeWrapper ${lib.getExe nodejs} $out/bin/palabre-landing \
       --set-default PORT 3000 \
+      --prefix PATH : ${lib.makeBinPath [ imagemagick ]} \
       --add-flags "$out/share/palabre-landing/dist/server/main.js"
 
     runHook postInstall

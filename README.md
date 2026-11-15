@@ -60,6 +60,11 @@ services.palabre = {
     brandName = "My organization";
     defaultLocale = "en";                 # "fr" (default) or "en"
     themeColor = "#1f3a5f";
+    pwa = {
+      enable = true;                      # installable app, off by default; requires `logo`
+      shortName = "Visio";                # name under the icon (default: brandName)
+      backgroundColor = "#ffffff";        # splash screen and adaptive icon background
+    };
     logo = ./logo.png;
     css = builtins.readFile ./theme.css;
   };
@@ -143,6 +148,12 @@ Useful markup: `body`, `.sheet` (the sheet), `.brand` (logo + name), `h1`, `.lea
 `#join-button`, `.banner`, `.history`, `.guide`. A backdrop can be added with, for example,
 `body::before { position: fixed; inset: 0; z-index: 0; pointer-events: none; … }` (the sheet is
 at `z-index: 1`).
+
+With `pwa.enable = true` (off by default; the evaluation fails if `logo` is missing) the page is an
+installable app. Its name (`brandName`, `pwa.shortName`), colors (`themeColor`,
+`pwa.backgroundColor`) and icon come from the module options. The icons (192 and 512 px, plus an
+adaptive one) are made from `logo` by the server on the first request, then served from memory.
+Chrome and other Chromium browsers show a banner inviting to install; Firefox does not.
 
 The `/admin` panel keeps its neutral style; only the name (`brandName`) appears there.
 

@@ -12,6 +12,13 @@ export async function applyRuntimeConfig(
   themeColor.content = config.themeColor;
   document.head.append(themeColor);
 
+  if (config.pwa) {
+    const manifest = document.createElement('link');
+    manifest.rel = 'manifest';
+    manifest.href = '/visio-assets/manifest.webmanifest';
+    document.head.append(manifest);
+  }
+
   if (config.hasLogo) {
     const icon = document.createElement('link');
     icon.rel = 'icon';

@@ -60,6 +60,11 @@ services.palabre = {
     brandName = "Mon organisation";
     defaultLocale = "fr";                 # "fr" (défaut) ou "en"
     themeColor = "#1f3a5f";
+    pwa = {
+      enable = true;                      # app installable, désactivée par défaut ; exige `logo`
+      shortName = "Visio";                # nom sous l'icône (défaut : brandName)
+      backgroundColor = "#ffffff";        # écran de démarrage et fond de l'icône adaptative
+    };
     logo = ./logo.png;
     css = builtins.readFile ./theme.css;
   };
@@ -145,6 +150,12 @@ Balisage utile : `body`, `.sheet` (la feuille), `.brand` (logo + nom), `h1`, `.l
 `#join-button`, `.banner`, `.history`, `.guide`. Un décor se pose par exemple avec
 `body::before { position: fixed; inset: 0; z-index: 0; pointer-events: none; … }` (la feuille
 est en `z-index: 1`).
+
+Avec `pwa.enable = true` (désactivé par défaut ; l'évaluation échoue si `logo` manque) la page est
+une application installable. Son nom (`brandName`, `pwa.shortName`), ses couleurs (`themeColor`,
+`pwa.backgroundColor`) et son icône viennent des options du module. Les icônes (192 et 512 px, plus
+une adaptative) sont produites à partir de `logo` par le serveur à la première requête, puis servies
+depuis la mémoire. Chrome et les navigateurs Chromium affichent un bandeau d'installation ; pas Firefox.
 
 Le panneau `/admin` garde son style neutre ; seul le nom (`brandName`) y apparaît.
 

@@ -5,6 +5,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app';
+import type { AppDeps } from './app';
+import { createPwaIcons } from './pwa';
 import { loadConfig } from './config';
 import type { PnmApi } from './plugnmeet';
 
@@ -39,7 +41,7 @@ let dir: string;
 let server: http.Server;
 let base: string;
 
-async function start(overrides: Record<string, string> = {}) {
+async function start(overrides: Record<string, string> = {}, extra: Partial<AppDeps> = {}) {
   server = http.createServer(
     createApp({
       config: loadConfig({ ...env, ...overrides }),
@@ -48,6 +50,7 @@ async function start(overrides: Record<string, string> = {}) {
       webDir: dir,
       logo: undefined,
       customCss: { data: Buffer.from('body{}'), contentType: 'text/css; charset=utf-8' },
+      ...extra,
     }),
   );
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -82,6 +85,7 @@ describe('files and pages', () => {
       themeColor: '#1f3a5f',
       hasLogo: false,
       hasCustomCss: true,
+      pwa: false,
     });
     expect((await fetch(`${base}/visio-assets/custom.css`)).headers.get('content-type')).toContain('text/css');
     expect((await fetch(`${base}/visio-assets/logo`)).status).toBe(404);
@@ -216,5 +220,89 @@ describe('administration panel', () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     await start({ ADMIN_TOKEN: '' });
     expect((await fetch(`${base}/admin`)).status).toBe(404);
+  });
+});
+
+describe('PWA', () => {
+  const restart = async (overrides: Record<string, string>, extra: Partial<AppDeps> = {}) => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await start(overrides, extra);
+  };
+  // A plain function (not vi.fn): the icons' resizer, counting its calls.
+  let calls = 0;
+  let failNext = false;
+  const resize = async (args: string[]) => {
+    calls++;
+    if (failNext) {
+      failNext = false;
+      throw new Error('magick missing');
+    }
+    return Buffer.from(`png:${args.join(' ')}`);
+  };
+  const pwaEnv = { LANDING_PWA: '1', LANDING_LOGO_FILE: '/etc/logo.svg' };
+
+  beforeEach(() => {
+    calls = 0;
+    failNext = false;
+  });
+
+  it('is off by default: nothing is served, the page is told so', async () => {
+    expect((await fetch(`${base}/visio-assets/manifest.webmanifest`)).status).toBe(404);
+    expect((await fetch(`${base}/visio-assets/sw.js`)).status).toBe(404);
+    expect(((await (await fetch(`${base}/visio-api/config`)).json()) as { pwa: boolean }).pwa).toBe(false);
+  });
+
+  it('serves a manifest that follows the host settings', async () => {
+    await restart(
+      { ...pwaEnv, LANDING_SHORT_NAME: 'Visio', LANDING_BACKGROUND_COLOR: '#101010', LANDING_THEME_COLOR: '#123456' },
+      { pwaIcons: createPwaIcons('/etc/logo.svg', '#101010', resize) },
+    );
+    const res = await fetch(`${base}/visio-assets/manifest.webmanifest`);
+    expect(res.headers.get('content-type')).toContain('application/manifest+json');
+    const manifest = await res.json();
+    expect(manifest).toMatchObject({
+      name: 'Mon organisation',
+      short_name: 'Visio',
+      theme_color: '#123456',
+      background_color: '#101010',
+      start_url: '/',
+    });
+    expect(manifest.icons.map((i: { sizes: string; purpose: string }) => `${i.sizes} ${i.purpose}`)).toEqual([
+      '192x192 any',
+      '512x512 any',
+      '512x512 maskable',
+    ]);
+  });
+
+  it('resizes an icon on the first request only, then serves it from the cache', async () => {
+    await restart(pwaEnv, { pwaIcons: createPwaIcons('/etc/logo.svg', '#ffffff', resize) });
+    const url = `${base}/visio-assets/pwa/icon-192.png`;
+    const [first, second] = await Promise.all([fetch(url), fetch(url)]);
+    expect(first.headers.get('content-type')).toBe('image/png');
+    expect(await first.text()).toContain('192x192');
+    expect(await second.text()).toContain('192x192');
+    await fetch(url);
+    expect(calls).toBe(1);
+    await fetch(`${base}/visio-assets/pwa/icon-512.png`);
+    expect(calls).toBe(2);
+    expect((await fetch(`${base}/visio-assets/pwa/other.png`)).status).toBe(404);
+    expect(calls).toBe(2);
+  });
+
+  it('does not keep a failed resize', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    failNext = true;
+    await restart(pwaEnv, { pwaIcons: createPwaIcons('/etc/logo.svg', '#ffffff', resize) });
+    const url = `${base}/visio-assets/pwa/icon-192.png`;
+    expect((await fetch(url)).status).toBe(404);
+    expect((await fetch(url)).status).toBe(200);
+  });
+
+  it('serves the service worker for the whole site', async () => {
+    fs.writeFileSync(path.join(dir, 'sw.js'), '// sw');
+    await restart(pwaEnv, { pwaIcons: createPwaIcons('/etc/logo.svg', '#ffffff', resize) });
+    const res = await fetch(`${base}/visio-assets/sw.js`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('service-worker-allowed')).toBe('/');
   });
 });

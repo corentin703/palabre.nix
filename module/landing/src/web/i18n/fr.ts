@@ -5,6 +5,13 @@
 export const fr = {
   localeName: 'Français',
 
+  install: {
+    title: "Installer l'application",
+    text: "Installez cette application sur votre appareil pour y accéder plus vite.",
+    action: 'Installer',
+    dismiss: 'Plus tard',
+  },
+
   join: {
     titleNew: 'Visioconférence',
     titleExisting: 'Rejoindre la visioconférence',

@@ -40,9 +40,17 @@ let
   hasCss = lib.trim lcfg.css != "";
   logoExt = lib.last (lib.splitString "." (baseNameOf (toString lcfg.logo)));
   logoTarget = "/etc/palabre/logo.${logoExt}";
+
 in
 {
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = !lcfg.pwa.enable || lcfg.logo != null;
+        message = "services.palabre.landing.pwa.enable requires services.palabre.landing.logo: the installed app's icons are made from it.";
+      }
+    ];
+
     services.palabre.rendered.landing = {
       unit = "podman-palabre-landing";
       secrets = {
@@ -72,6 +80,13 @@ in
         # contain characters this format does not like.
         LANDING_BRAND_NAME = lcfg.brandName;
       }
+      // lib.optionalAttrs lcfg.pwa.enable (
+        {
+          LANDING_PWA = "1";
+          LANDING_BACKGROUND_COLOR = lcfg.pwa.backgroundColor;
+        }
+        // lib.optionalAttrs (lcfg.pwa.shortName != null) { LANDING_SHORT_NAME = lcfg.pwa.shortName; }
+      )
       // lib.optionalAttrs hasCss { LANDING_CSS_FILE = "/etc/palabre/custom.css"; }
       // lib.optionalAttrs (lcfg.logo != null) { LANDING_LOGO_FILE = logoTarget; };
       environmentFiles = [

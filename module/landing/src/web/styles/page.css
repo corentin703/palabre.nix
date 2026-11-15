@@ -138,3 +138,9 @@ button:disabled { opacity: 0.65; cursor: wait; }
 .locale-switch { display: flex; justify-content: flex-end; gap: 0.4rem; margin: 0 0 0.5rem; }
 .locale-switch button { min-height: 0; padding: 0.15rem 0.6rem; font-size: 0.85rem; font-weight: 600; }
 .locale-switch button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+
+.install-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; }
+.install-actions { display: inline-flex; align-items: center; gap: 0.8rem; }
+.install-banner button:not(.link-button) { font: inherit; font-weight: 700; color: #fff; background: var(--action); border: 0; border-radius: 0.4rem; padding: 0.4rem 0.9rem; cursor: pointer; }
+.install-banner button:not(.link-button):hover { background: var(--action-hover, var(--action)); }
+.install-banner .link-button { font: inherit; font-weight: 400; color: var(--brand); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }

@@ -229,7 +229,7 @@ in
       brandName = mkOption {
         type = types.str;
         default = "Visioconférence";
-        description = "Name shown on the landing page, in its title and on /admin.";
+        description = "Name shown on the landing page, in its title, on /admin and as the name of the installed app (PWA).";
       };
       defaultLocale = mkOption {
         type = types.enum [
@@ -247,12 +247,29 @@ in
       themeColor = mkOption {
         type = types.str;
         default = "#1f3a5f";
-        description = "Color of the browser bar (`theme-color`).";
+        description = "Color of the browser bar and of the installed app's title bar (`theme-color`).";
+      };
+      pwa = {
+        enable = mkEnableOption "the installable app (PWA): manifest, service worker and install banner (needs `logo`)";
+        shortName = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          example = "Visio";
+          description = ''
+            Name of the installed app under its icon, where space is short. Default: `brandName`,
+            cut to 12 characters if longer.
+          '';
+        };
+        backgroundColor = mkOption {
+          type = types.str;
+          default = "#ffffff";
+          description = "Splash screen color of the installed app, and background of its adaptive icon.";
+        };
       };
       logo = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = "Logo (png, jpg, webp, svg or gif), shown on the page and used as its icon.";
+        description = "Logo (png, jpg, webp, svg or gif), shown on the page and used as its icon, and, with `pwa.enable`, resized by the server (on the first request, then kept in memory) into the installed app's icons: square and at least 512x512 recommended. Required by `pwa.enable`.";
       };
       css = mkOption {
         type = types.lines;

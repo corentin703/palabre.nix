@@ -4,6 +4,7 @@ import * as path from 'node:path';
 import { createApp } from './app.js';
 import { ConfigError, loadConfig } from './config.js';
 import { loadFile } from './files.js';
+import { createPwaIcons } from './pwa.js';
 import { createPnm } from './plugnmeet.js';
 
 /** Root of the installed application: dist/server/ -> .. -> .. */
@@ -19,6 +20,7 @@ try {
     webDir: WEB_DIR,
     logo: loadFile(config.logoFile),
     customCss: loadFile(config.cssFile),
+    pwaIcons: config.pwa && config.logoFile ? createPwaIcons(config.logoFile, config.backgroundColor) : undefined,
   });
 
   http.createServer(app).listen(config.port, config.bindHost, () => {
