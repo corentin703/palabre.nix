@@ -86,8 +86,9 @@ téléchargent au lieu de le compiler (un build Vite). Pour utiliser le cache :
 $ cachix use palabre
 ```
 
-ou ajoutez `https://palabre.cachix.org` et la clé publique du cache à `nix.settings.substituters`
-et `nix.settings.trusted-public-keys`. Mainteneurs : créez le cache sur cachix.org et ajoutez son
+ou ajoutez `https://palabre.cachix.org` et la clé publique `palabre.cachix.org-1:llE6p76J47pEBXVonV3bdqn+Qhms1fn6JMqDzR9SAXw=`
+à `nix.settings.substituters` et `nix.settings.trusted-public-keys` (le `nixConfig` de ce flake le fait
+déjà pour ses propres commandes). Mainteneurs : créez le cache sur cachix.org et ajoutez son
 jeton d'authentification aux secrets du dépôt sous le nom `CACHIX_AUTH_TOKEN`.
 
 ## Langues

@@ -1,6 +1,12 @@
 {
   description = "Palabre : visioconférence autohébergée (PlugNMeet + LiveKit + NATS) pour NixOS";
 
+  # Binary cache for packages.<system>.palabre-landing (pushed by CI). Mirrored in the README.
+  nixConfig = {
+    extra-substituters = [ "https://palabre.cachix.org" ];
+    extra-trusted-public-keys = [ "palabre.cachix.org-1:llE6p76J47pEBXVonV3bdqn+Qhms1fn6JMqDzR9SAXw=" ];
+  };
+
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
 

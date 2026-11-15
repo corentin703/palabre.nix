@@ -85,8 +85,9 @@ instead of compiling it (a Vite build). To use the cache:
 $ cachix use palabre
 ```
 
-or add `https://palabre.cachix.org` and the cache's public key to `nix.settings.substituters`
-and `nix.settings.trusted-public-keys`. Maintainers: create the cache on cachix.org and add its
+or add `https://palabre.cachix.org` and the public key `palabre.cachix.org-1:llE6p76J47pEBXVonV3bdqn+Qhms1fn6JMqDzR9SAXw=`
+to `nix.settings.substituters` and `nix.settings.trusted-public-keys` (this flake's `nixConfig` already
+does it for its own commands). Maintainers: create the cache on cachix.org and add its
 auth token to the repository's secrets as `CACHIX_AUTH_TOKEN`.
 
 ## Languages
