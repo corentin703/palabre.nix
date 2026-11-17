@@ -192,10 +192,6 @@ cat > Caddyfile <<CONF
 		uri strip_prefix /ws
 		reverse_proxy 127.0.0.1:$PNM_NATS_WS_PORT
 	}
-	@endRoom path /api/endRoom
-	handle @endRoom {
-		reverse_proxy 127.0.0.1:$PNM_LANDING_PORT
-	}
 	@landing path /join /join/* /r/* /admin /admin/* /visio-assets/* /visio-api/*
 	handle @landing {
 		reverse_proxy 127.0.0.1:$PNM_LANDING_PORT

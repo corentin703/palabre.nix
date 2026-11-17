@@ -22,14 +22,6 @@ in
         reverse_proxy http://127.0.0.1:${toString cfg.ports.natsWebsocket}
     }
 
-    # The PlugNMeet client's "end meeting" button, which an administrator takes for "leave":
-    # the landing page refuses it while another administrator is in the room, and otherwise
-    # passes it on to PlugNMeet unchanged (see module/landing/src/server/end-room.ts).
-    @endRoom path /api/endRoom
-    handle @endRoom {
-        reverse_proxy http://127.0.0.1:${toString cfg.ports.landing}
-    }
-
     # Landing page: room creation/joining, the /admin panel and their
     # resources (/visio-assets, /visio-api: /assets and /api belong to the
     # PlugNMeet client).

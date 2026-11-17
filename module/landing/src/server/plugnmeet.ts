@@ -11,7 +11,6 @@ export const {
   CreateRoomReqSchema,
   FetchPastRoomsReqSchema,
   GenerateTokenReqSchema,
-  GetActiveRoomInfoReqSchema,
   IsRoomActiveReqSchema,
   RoomEndReqSchema,
 } = sdk;
@@ -22,7 +21,6 @@ export type PnmApi = Pick<
   | 'isRoomActive'
   | 'createRoom'
   | 'getJoinToken'
-  | 'getActiveRoomInfo'
   | 'getActiveRoomsInfo'
   | 'fetchPastRoomsInfo'
   | 'endRoom'
