@@ -24,6 +24,11 @@ export const en: Messages = {
     submitNew: 'Confirm and enter the room',
     submitExisting: 'Join the video conference',
     preparing: 'Preparing the room…',
+    mailAskTitle: 'Get the links by email?',
+    mailAskText:
+      'Before you enter, you can get two emails: one with the invitation link to send to the participants, one with your moderator link, which lets you get your rights back later. Your address is not kept.',
+    mailAskSend: 'Send the links and enter the room',
+    mailAskSkip: 'No thanks, enter the room',
     connecting: 'Connecting…',
     soleModeratorNote:
       "You will be the only moderator of this room. Two links will be offered below: one to send to the other participants, the other to keep for yourself.",

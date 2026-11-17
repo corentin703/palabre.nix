@@ -26,6 +26,11 @@ export const fr = {
     submitNew: 'Valider et entrer dans le salon',
     submitExisting: 'Rejoindre la visioconférence',
     preparing: 'Préparation du salon…',
+    mailAskTitle: 'Recevoir les liens par courriel ?',
+    mailAskText:
+      'Avant d’entrer, vous pouvez recevoir deux courriels : l’un avec le lien d’invitation à transmettre aux participants, l’autre avec votre lien de modérateur, qui vous permet de retrouver vos droits plus tard. Votre adresse n’est pas conservée.',
+    mailAskSend: 'Envoyer les liens et entrer dans le salon',
+    mailAskSkip: 'Non merci, entrer dans le salon',
     connecting: 'Connexion en cours…',
     soleModeratorNote:
       "Vous serez le seul modérateur de ce salon. Deux liens vous seront proposés ci-dessous : l'un à transmettre aux autres participants, l'autre à conserver pour vous.",
