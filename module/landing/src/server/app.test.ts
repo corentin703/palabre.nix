@@ -203,6 +203,19 @@ describe('administration panel', () => {
     expect(forged.status).toBe(401);
   });
 
+  it('generates new links: a fresh key whose tag matches the room identifier', async () => {
+    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    const ask = (name: string) => postJson('/admin/api/links', { name }, { cookie });
+    const response = await ask('Réunion équipe');
+    expect(response.status).toBe(200);
+    const { roomId, mod } = (await response.json()) as { roomId: string; mod: string };
+    expect(roomId).toMatch(/^reunion-equipe-[0-9a-f]{12}$/);
+    const info = await fetch(`${base}/visio-api/room-info?room=${roomId}&m=${mod}`);
+    expect(await info.json()).toMatchObject({ moderator: true });
+    expect((await ask('!!!')).status).toBe(400);
+    expect((await postJson('/admin/api/links', { name: 'x' })).status).toBe(401);
+  });
+
   it('refuses a request that changes something without being JSON from this same site', async () => {
     const wrongType = await fetch(`${base}/admin/login`, { method: 'POST', body: '{}' });
     expect(wrongType.status).toBe(400);

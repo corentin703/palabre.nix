@@ -38,3 +38,10 @@ td.actions { text-align: right; white-space: nowrap; }
 .locale-switch button:hover { background: transparent; color: var(--text); }
 .locale-switch button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .login-form { margin-top: 1rem; }
+
+.share { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1.2rem; }
+.field { display: flex; flex-direction: column; gap: 0.4rem; }
+.share-row { display: flex; gap: 0.6rem; }
+.share-row input { flex: 1; min-width: 0; }
+.note { color: var(--muted); font-size: 0.85rem; margin: 0; }
+@media (max-width: 600px) { .share-row { flex-direction: column; } }

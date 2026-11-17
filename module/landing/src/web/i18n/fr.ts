@@ -113,6 +113,11 @@ export const fr = {
     confirmClose: (title: string) =>
       `Fermer et supprimer le salon « ${title} » ?\n\nLes participants sont déconnectés. Le tableau blanc, le chat et les fichiers déposés sont effacés définitivement.`,
     errorStatus: (status: number) => `Erreur ${status}`,
+    newLinks: 'Générer de nouveaux liens',
+    newLinksHelp:
+      "Crée un nouveau salon (nouveau lien participants et nouveau lien modérateur). Les anciens liens ne sont pas modifiés ni révoqués.",
+    roomName: 'Nom du salon',
+    generate: 'Générer',
   },
 
   errors: {

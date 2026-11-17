@@ -84,3 +84,9 @@ export interface RoomsListing {
   active: ActiveRoom[];
   past: PastRoom[];
 }
+
+/** Links generated from the administration panel: identifier and moderator key of a new room. */
+export interface GeneratedLinks {
+  roomId: string;
+  mod: string;
+}

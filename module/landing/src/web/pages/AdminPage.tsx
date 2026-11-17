@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { ActiveRoom, RoomsListing } from '../../shared/api';
+import type { ActiveRoom, GeneratedLinks, RoomsListing } from '../../shared/api';
+import { CopyField } from '../components/CopyField';
 import { ApiFailure, request } from '../api';
 import { LocaleSwitcher, useI18n } from '../i18n';
 import { errorMessage } from '../i18n/errors';
@@ -31,6 +32,8 @@ export default function AdminPage({ brandName }: { brandName: string }) {
   const [token, setToken] = useState('');
   const [loginError, setLoginError] = useState('');
   const [error, setError] = useState('');
+  const [linkName, setLinkName] = useState('');
+  const [links, setLinks] = useState<GeneratedLinks | null>(null);
 
   document.title = `${t.admin.title} - ${brandName}`;
 
@@ -102,6 +105,14 @@ export default function AdminPage({ brandName }: { brandName: string }) {
     });
   }
 
+  function generateLinks(event: FormEvent) {
+    event.preventDefault();
+    void act(async () => {
+      setLinks(await request<GeneratedLinks>('/admin/api/links', { name: linkName }));
+      setError('');
+    });
+  }
+
   function closeRoom(room: ActiveRoom) {
     if (!confirm(t.admin.confirmClose(room.title || room.roomId))) return;
     void act(async () => {
@@ -156,6 +167,40 @@ export default function AdminPage({ brandName }: { brandName: string }) {
         </div>
       </section>
       {error && <p className="error">{error}</p>}
+
+      <section className="card">
+        <h2>{t.admin.newLinks}</h2>
+        <p className="muted">{t.admin.newLinksHelp}</p>
+        <form onSubmit={generateLinks}>
+          <label htmlFor="link-name" className="muted">
+            {t.admin.roomName}
+          </label>
+          <input
+            id="link-name"
+            type="text"
+            required
+            maxLength={128}
+            value={linkName}
+            onChange={(e) => setLinkName(e.target.value)}
+          />
+          <button type="submit">{t.admin.generate}</button>
+        </form>
+        {links && (
+          <div className="share">
+            <CopyField
+              id="share-link"
+              label={t.share.participantsLink}
+              value={`${location.origin}/r/${links.roomId}`}
+            />
+            <CopyField
+              id="mod-link"
+              label={t.share.moderatorLink}
+              value={`${location.origin}/r/${links.roomId}?m=${links.mod}`}
+              note={t.share.moderatorNote}
+            />
+          </div>
+        )}
+      </section>
 
       <section className="card">
         <h2>

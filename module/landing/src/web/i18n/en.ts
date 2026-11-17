@@ -111,6 +111,11 @@ export const en: Messages = {
     confirmClose: (title: string) =>
       `Close and delete the room “${title}”?\n\nParticipants are disconnected. The whiteboard, the chat and the uploaded files are erased permanently.`,
     errorStatus: (status: number) => `Error ${status}`,
+    newLinks: 'Generate new links',
+    newLinksHelp:
+      'Creates a new room (new participants link and new moderator link). Existing links are neither changed nor revoked.',
+    roomName: 'Room name',
+    generate: 'Generate',
   },
 
   errors: {

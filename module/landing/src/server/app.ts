@@ -38,7 +38,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
   const joinLimiter = new RateLimiter(RATE_WINDOW_MS, 10);
   // Separate limiter for key creation (one per new room name typed).
   const keyLimiter = new RateLimiter(RATE_WINDOW_MS, 60);
-  const admin = config.adminToken ? createAdminHandler({ pnm, config, adminToken: config.adminToken }) : null;
+  const admin = config.adminToken ? createAdminHandler({ pnm, config, adminToken: config.adminToken, keys }) : null;
   if (!admin) console.warn('ADMIN_TOKEN is not set: the /admin panel is disabled');
 
   const runtimeConfig: RuntimeConfig = {

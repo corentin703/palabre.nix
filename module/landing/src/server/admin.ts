@@ -9,6 +9,8 @@ import { adminName } from './messages.js';
 import { FetchPastRoomsReqSchema, RoomEndReqSchema, createJoinUrl, createRequest } from './plugnmeet.js';
 import type { PnmApi } from './plugnmeet.js';
 import { WindowCounter } from './window-counter.js';
+import type { RoomKeys } from './rooms.js';
+import { ROOM_NAME_MAX, slugifyRoomId } from '../shared/slug.js';
 
 // Administration panel (/admin): list of PlugNMeet rooms and manual closing.
 // Authentication by a single token (from a secret file) exchanged for a signed session cookie.
@@ -49,10 +51,11 @@ export interface AdminDeps {
   pnm: PnmApi;
   config: Config;
   adminToken: string;
+  keys: RoomKeys;
 }
 
 /** Returns a handler answering the /admin/login, /admin/logout and /admin/api/* routes. */
-export function createAdminHandler({ pnm, config, adminToken }: AdminDeps) {
+export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps) {
   const tokenDigest = sha256(adminToken);
   const failures = new WindowCounter(LOGIN_WINDOW_MS);
 
@@ -183,6 +186,20 @@ export function createAdminHandler({ pnm, config, adminToken }: AdminDeps) {
           console.log(`admin ended room ${roomId} (from ${ip})`);
           sendJson(res, 200, { ok: true });
         }
+        return true;
+      }
+      // New links: same recipe as a room created from the home page (fresh moderator key,
+      // identifier "name-tag"). The room itself is created when someone joins.
+      if (isPost && pathname === '/admin/api/links') {
+        if (!isSafeMutation(req)) return sendError(res, 400, 'invalid_request');
+        const body = (await readJson(req, 2000)) as { name?: unknown } | null;
+        const name = typeof body?.name === 'string' ? body.name.trim() : '';
+        const slug = slugifyRoomId(name, ROOM_NAME_MAX);
+        if (!slug) return sendError(res, 400, 'invalid_room');
+        const { mod, tag } = keys.newKey();
+        const roomId = `${slug}-${tag}`;
+        console.log(`admin generated links for room ${roomId} (from ${ip})`);
+        sendJson(res, 200, { roomId, mod });
         return true;
       }
     } catch (err) {
