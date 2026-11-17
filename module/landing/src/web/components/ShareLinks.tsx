@@ -12,10 +12,12 @@ interface Props {
   mod: string;
   /** The server can send the links by email. */
   mail?: boolean;
+  /** The links were just sent by email. */
+  onMailSent?: () => void;
 }
 
 /** The two links of a room: the one to send to participants, and the moderator link. */
-export function ShareLinks({ roomId, mod, mail = false }: Props) {
+export function ShareLinks({ roomId, mod, mail = false, onMailSent }: Props) {
   const { t } = useI18n();
   const participantsUrl = `${location.origin}/r/${roomId}`;
   return (
@@ -29,13 +31,13 @@ export function ShareLinks({ roomId, mod, mail = false }: Props) {
           note={t.share.moderatorNote}
         />
       )}
-      {mail && mod && <EmailLinks roomId={roomId} mod={mod} />}
+      {mail && mod && <EmailLinks roomId={roomId} mod={mod} {...(onMailSent ? { onSent: onMailSent } : {})} />}
     </section>
   );
 }
 
 /** "Send me the links": two separate mails, one with the invitation link, one with the moderator link. */
-function EmailLinks({ roomId, mod }: { roomId: string; mod: string }) {
+function EmailLinks({ roomId, mod, onSent }: { roomId: string; mod: string; onSent?: () => void }) {
   const { t, locale } = useI18n();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
@@ -48,6 +50,7 @@ function EmailLinks({ roomId, mod }: { roomId: string; mod: string }) {
     try {
       await sendLinks({ room: roomId, mod, email, locale });
       setStatus('sent');
+      onSent?.();
     } catch (failure) {
       setError(errorMessage(t, failure));
       setStatus('idle');

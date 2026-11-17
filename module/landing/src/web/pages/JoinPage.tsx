@@ -88,6 +88,8 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
   const [askMail, setAskMail] = useState<{ roomId: string; mod: string } | null>(null);
   const [mailAddress, setMailAddress] = useState('');
   const [mailSent, setMailSent] = useState(false);
+  /** Room whose links were already sent (by the question or by the form under the links): no need to ask again. */
+  const [mailedRoom, setMailedRoom] = useState('');
   const [moderator, setModerator] = useState(false);
   const roomKey = useRoomKey(roomInput, !preset);
 
@@ -128,6 +130,8 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
       saveName(name.trim());
       location.assign(url);
     } catch (failure) {
+      // Back to the main form: the links, if they were sent, are not sent (nor asked) again.
+      setAskMail(null);
       setError(errorMessage(t, failure));
       setStatus('idle');
     }
@@ -146,7 +150,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
       const mod = preset ? preset.mod : (key?.mod ?? '');
       const roomId = preset ? preset.room : key ? `${roomKey.name}-${key.tag}` : '';
       // New room, and mails are possible: before entering, offer to get the links by email.
-      if (config.mail && !preset && mod && roomId) {
+      if (config.mail && !preset && mod && roomId && mailedRoom !== roomId) {
         setStatus('idle');
         setAskMail({ roomId, mod });
         return;
@@ -173,6 +177,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
       return;
     }
     setMailSent(true);
+    setMailedRoom(askMail.roomId);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     await enter(askMail.roomId, askMail.mod);
   }
@@ -284,7 +289,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
         </form>
         {!preset && <p className="note">{t.join.soleModeratorNote}</p>}
 
-        {shown && <ShareLinks roomId={shown.roomId} mod={shown.mod} mail={config.mail} />}
+        {shown && <ShareLinks roomId={shown.roomId} mod={shown.mod} mail={config.mail} onMailSent={() => setMailedRoom(shown.roomId)} />}
         <History
           items={history}
           onClear={() => {
