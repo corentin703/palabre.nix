@@ -10,7 +10,7 @@ import { FetchPastRoomsReqSchema, RoomEndReqSchema, createJoinUrl, createRequest
 import type { PnmApi } from './plugnmeet.js';
 import { WindowCounter } from './window-counter.js';
 import type { RoomKeys } from './rooms.js';
-import { ROOM_NAME_MAX, slugifyRoomId } from '../shared/slug.js';
+import { ROOM_ID_RE as TAGGED_ROOM_ID_RE, ROOM_NAME_MAX, slugifyRoomId } from '../shared/slug.js';
 
 // Administration panel (/admin): list of PlugNMeet rooms and manual closing.
 // Authentication by a single token (from a secret file) exchanged for a signed session cookie.
@@ -85,6 +85,12 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
     return { roomId: body.roomId, locale: isLocale(body.locale) ? body.locale : config.defaultLocale };
   }
 
+  /** Moderator key of a room, to build its link: computed again from the identifier's tag. */
+  const modOf = (roomId: string): string => {
+    const tag = TAGGED_ROOM_ID_RE.exec(roomId)?.[2];
+    return tag ? keys.modOf(tag) : '';
+  };
+
   async function listRooms(): Promise<RoomsListing> {
     // The history is secondary: if it fails, the open rooms are still shown
     // rather than blocking the whole page.
@@ -108,6 +114,7 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
 
     const active: (ActiveRoom & { sid: string })[] = (activeRes.status ? activeRes.rooms : []).map((r) => ({
       roomId: r.roomInfo?.roomId ?? '',
+      mod: modOf(r.roomInfo?.roomId ?? ''),
       title: r.roomInfo?.roomTitle ?? '',
       participants: r.participantsInfo.map((p) => p.name || '?'),
       created: String(r.roomInfo?.creationTime ?? ''),
@@ -119,6 +126,7 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
       .filter((r) => !activeSids.has(r.roomSid))
       .map((r) => ({
         roomId: r.roomId,
+        mod: modOf(r.roomId),
         title: r.roomTitle,
         participants: Number(r.joinedParticipants) || 0,
         created: String(r.created),

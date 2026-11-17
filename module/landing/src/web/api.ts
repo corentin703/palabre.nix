@@ -1,4 +1,13 @@
-import type { ApiError, ErrorCode, JoinRequest, JoinResponse, RoomInfo, RoomKey, RuntimeConfig } from '../shared/api';
+import type {
+  ApiError,
+  ErrorCode,
+  JoinRequest,
+  JoinResponse,
+  RoomInfo,
+  RoomKey,
+  RuntimeConfig,
+  SendLinksRequest,
+} from '../shared/api';
 
 /** Error of a server response, or 'network' if we could not talk to it. */
 export class ApiFailure extends Error {
@@ -34,3 +43,4 @@ export const getRoomKey = () => request<RoomKey>('/visio-api/room-key');
 export const getRoomInfo = (room: string, mod: string) =>
   request<RoomInfo>(`/visio-api/room-info?room=${encodeURIComponent(room)}&m=${encodeURIComponent(mod)}`);
 export const joinRoom = (join: JoinRequest) => request<JoinResponse>('/visio-api/join', join);
+export const sendLinks = (links: SendLinksRequest) => request<{ ok: true }>('/visio-api/send-links', links);

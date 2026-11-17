@@ -130,6 +130,28 @@ déclarez-la dans `src/web/i18n/index.tsx`, ajoutez son message de bienvenue dan
 `src/server/messages.ts`, et autorisez-la dans l'option `landing.defaultLocale`. Tous les chemins
 sont sous `module/landing/`.
 
+## Envoi des liens par courriel
+
+Avec `landing.mail` renseigné, la page propose d'envoyer par courriel les liens du salon à la
+personne qui l'a créé : deux courriels distincts, l'un avec le lien d'invitation (transférable
+tel quel), l'autre avec le lien de modérateur (et un avertissement de ne pas le transférer),
+dans la langue choisie sur la page. Ils reprennent l'apparence de la page d'accueil (feuille
+blanche, bandeau d'accent, `themeColor`, logo). Le panneau `/admin` donne les deux liens de
+chaque salon, ouvert ou terminé, avec des boutons de copie.
+
+```nix
+services.palabre.landing.mail = {
+  host = "smtp.example.org";
+  security = "starttls";               # "tls" (465), "starttls" (587, défaut) ou "none"
+  from = "visio@example.org";
+  user = "visio";
+  passwordFile = config.sops.secrets.palabre-smtp-password.path;
+};
+```
+
+Le formulaire n'envoie les liens d'un salon qu'à qui détient sa clé de modérateur, et au plus 3
+fois par jour vers la même adresse.
+
 ## Personnaliser la page d'accueil
 
 `landing.css` est injecté dans une balise `<style>` placée **après** la feuille de base : il peut

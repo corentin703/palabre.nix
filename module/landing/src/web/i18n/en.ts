@@ -36,6 +36,13 @@ export const en: Messages = {
       'Keep it to yourself: it lets you get your moderator rights back from any device, even weeks from now (email it to yourself). Do not send it to the other participants.',
     copy: 'Copy',
     copied: 'Link copied',
+    emailLabel: 'Get both links by email',
+    emailPlaceholder: 'for example: camille@example.com',
+    emailSend: 'Send',
+    emailSending: 'Sending…',
+    emailSent: 'Emails sent: one with the invitation link, one with your moderator link.',
+    emailNote:
+      'You get two separate emails: the invitation one can be forwarded to the participants, the moderator one must not be. Your address is not kept.',
   },
 
   history: {
@@ -107,6 +114,9 @@ export const en: Messages = {
     noActiveRoom: 'No open room.',
     noPastRoom: 'No past room.',
     joinAsModerator: 'Join as moderator',
+    copyInvitation: 'Copy invitation link',
+    copyModerator: 'Copy moderator link',
+    copied: 'Copied',
     closeRoom: 'Close / delete',
     confirmClose: (title: string) =>
       `Close and delete the room “${title}”?\n\nParticipants are disconnected. The whiteboard, the chat and the uploaded files are erased permanently.`,
@@ -128,6 +138,8 @@ export const en: Messages = {
     unauthorized: 'Not signed in.',
     plugnmeet_failed: 'The PlugNMeet API failed',
     not_found: 'Not found.',
+    mail_failed: 'The emails could not be sent; please try again later.',
+    mail_disabled: 'Sending by email is not available.',
     network: 'The server does not answer; please try again.',
   },
 };

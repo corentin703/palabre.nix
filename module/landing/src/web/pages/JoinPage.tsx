@@ -120,9 +120,15 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
       }
       setStatus('connecting');
       const mod = preset ? preset.mod : (key?.mod ?? '');
-      const { url } = await joinRoom({ room: preset ? preset.room : roomInput, name, mod, locale });
-
       const roomId = preset ? preset.room : key ? `${roomKey.name}-${key.tag}` : '';
+      const { url } = await joinRoom({
+        room: roomId || roomInput,
+        name,
+        mod,
+        locale,
+        ...(preset ? {} : { title: roomInput.trim() }),
+      });
+
       if (roomId) {
         rememberMeeting({ slug: roomId, title: roomInput.trim() || roomId.replace(/-[0-9a-f]{12}$/, ''), mod, at: Date.now() });
       }
@@ -207,7 +213,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
         </form>
         {!preset && <p className="note">{t.join.soleModeratorNote}</p>}
 
-        {shown && <ShareLinks roomId={shown.roomId} mod={shown.mod} />}
+        {shown && <ShareLinks roomId={shown.roomId} mod={shown.mod} mail={config.mail} />}
         <History
           items={history}
           onClear={() => {

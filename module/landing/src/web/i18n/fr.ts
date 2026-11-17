@@ -38,6 +38,13 @@ export const fr = {
       "À conserver pour vous seul : il vous permet de retrouver vos droits de modérateur depuis n'importe quel appareil, même dans plusieurs semaines (envoyez-le vous par courriel). Ne le transmettez pas aux autres participants.",
     copy: 'Copier',
     copied: 'Lien copié',
+    emailLabel: 'Recevoir les deux liens par courriel',
+    emailPlaceholder: 'par exemple : camille@exemple.fr',
+    emailSend: 'Envoyer',
+    emailSending: 'Envoi…',
+    emailSent: 'Courriels envoyés : un avec le lien d’invitation, un avec votre lien de modérateur.',
+    emailNote:
+      'Vous recevez deux courriels distincts : celui du lien d’invitation peut être transféré aux participants, celui du lien de modérateur ne doit pas l’être. Votre adresse n’est pas conservée.',
   },
 
   history: {
@@ -109,6 +116,9 @@ export const fr = {
     noActiveRoom: 'Aucune salle ouverte.',
     noPastRoom: 'Aucune salle terminée.',
     joinAsModerator: 'Rejoindre en modérateur',
+    copyInvitation: 'Copier le lien d’invitation',
+    copyModerator: 'Copier le lien modérateur',
+    copied: 'Copié',
     closeRoom: 'Fermer / supprimer',
     confirmClose: (title: string) =>
       `Fermer et supprimer le salon « ${title} » ?\n\nLes participants sont déconnectés. Le tableau blanc, le chat et les fichiers déposés sont effacés définitivement.`,
@@ -131,6 +141,8 @@ export const fr = {
     unauthorized: 'Non authentifié.',
     plugnmeet_failed: "L'API PlugNMeet a échoué",
     not_found: 'Introuvable.',
+    mail_failed: "L'envoi des courriels a échoué ; veuillez réessayer ultérieurement.",
+    mail_disabled: "L'envoi par courriel n'est pas disponible.",
     network: 'Le serveur ne répond pas ; veuillez réessayer.',
   },
 };

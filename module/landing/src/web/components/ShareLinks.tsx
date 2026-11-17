@@ -1,4 +1,8 @@
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { sendLinks } from '../api';
 import { useI18n } from '../i18n';
+import { errorMessage } from '../i18n/errors';
 import { CopyField } from './CopyField';
 
 interface Props {
@@ -6,10 +10,12 @@ interface Props {
   roomId: string;
   /** Moderator key; empty for a regular participant. */
   mod: string;
+  /** The server can send the links by email. */
+  mail?: boolean;
 }
 
 /** The two links of a room: the one to send to participants, and the moderator link. */
-export function ShareLinks({ roomId, mod }: Props) {
+export function ShareLinks({ roomId, mod, mail = false }: Props) {
   const { t } = useI18n();
   const participantsUrl = `${location.origin}/r/${roomId}`;
   return (
@@ -23,6 +29,62 @@ export function ShareLinks({ roomId, mod }: Props) {
           note={t.share.moderatorNote}
         />
       )}
+      {mail && mod && <EmailLinks roomId={roomId} mod={mod} />}
     </section>
+  );
+}
+
+/** "Send me the links": two separate mails, one with the invitation link, one with the moderator link. */
+function EmailLinks({ roomId, mod }: { roomId: string; mod: string }) {
+  const { t, locale } = useI18n();
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [error, setError] = useState('');
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setError('');
+    setStatus('sending');
+    try {
+      await sendLinks({ room: roomId, mod, email, locale });
+      setStatus('sent');
+    } catch (failure) {
+      setError(errorMessage(t, failure));
+      setStatus('idle');
+    }
+  }
+
+  return (
+    <form className="field email-links" onSubmit={submit}>
+      <label htmlFor="email-links">{t.share.emailLabel}</label>
+      <div className="share-row">
+        <input
+          id="email-links"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder={t.share.emailPlaceholder}
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setStatus('idle');
+          }}
+        />
+        <button type="submit" disabled={status === 'sending'}>
+          {status === 'sending' ? t.share.emailSending : t.share.emailSend}
+        </button>
+      </div>
+      {status === 'sent' && (
+        <p className="note" role="status">
+          {t.share.emailSent}
+        </p>
+      )}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      <p className="note">{t.share.emailNote}</p>
+    </form>
   );
 }

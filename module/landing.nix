@@ -49,6 +49,14 @@ in
         assertion = !lcfg.pwa.enable || lcfg.logo != null;
         message = "services.palabre.landing.pwa.enable requires services.palabre.landing.logo: the installed app's icons are made from it.";
       }
+      {
+        assertion = lcfg.mail.host == null || lcfg.mail.from != null;
+        message = "services.palabre.landing.mail.from is required with services.palabre.landing.mail.host.";
+      }
+      {
+        assertion = (lcfg.mail.user == null) == (lcfg.mail.passwordFile == null);
+        message = "services.palabre.landing.mail.user and services.palabre.landing.mail.passwordFile go together.";
+      }
     ];
 
     services.palabre.rendered.landing = {
@@ -57,7 +65,8 @@ in
         PLUGNMEET_API_KEY = cfg.secrets.plugnmeetApiKeyFile;
         PLUGNMEET_API_SECRET = cfg.secrets.plugnmeetApiSecretFile;
         ADMIN_TOKEN = cfg.secrets.adminTokenFile;
-      };
+      }
+      // lib.optionalAttrs (lcfg.mail.passwordFile != null) { MAIL_PASSWORD = lcfg.mail.passwordFile; };
       content = ''
         PORT=${toString cfg.ports.landing}
         BIND_HOST=127.0.0.1
@@ -68,6 +77,9 @@ in
         ADMIN_TOKEN=@ADMIN_TOKEN@
         LANDING_THEME_COLOR=${lcfg.themeColor}
         LANDING_DEFAULT_LOCALE=${lcfg.defaultLocale}
+      ''
+      + lib.optionalString (lcfg.mail.passwordFile != null) ''
+        MAIL_PASSWORD=@MAIL_PASSWORD@
       '';
     };
 
@@ -86,6 +98,15 @@ in
           LANDING_BACKGROUND_COLOR = lcfg.pwa.backgroundColor;
         }
         // lib.optionalAttrs (lcfg.pwa.shortName != null) { LANDING_SHORT_NAME = lcfg.pwa.shortName; }
+      )
+      // lib.optionalAttrs (lcfg.mail.host != null) (
+        {
+          MAIL_HOST = lcfg.mail.host;
+          MAIL_SECURITY = lcfg.mail.security;
+          MAIL_FROM = lcfg.mail.from;
+        }
+        // lib.optionalAttrs (lcfg.mail.port != null) { MAIL_PORT = toString lcfg.mail.port; }
+        // lib.optionalAttrs (lcfg.mail.user != null) { MAIL_USER = lcfg.mail.user; }
       )
       // lib.optionalAttrs hasCss { LANDING_CSS_FILE = "/etc/palabre/custom.css"; }
       // lib.optionalAttrs (lcfg.logo != null) { LANDING_LOGO_FILE = logoTarget; };

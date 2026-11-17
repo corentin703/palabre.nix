@@ -22,10 +22,9 @@ interface RoomTarget {
 
 /**
  * Two cases:
- *  - link (identifier "name-tag"): we join that room; we are its moderator only if we
- *    present a key whose tag matches (moderator link);
- *  - name typed on the home page: we create OUR room with the key given by the browser;
- *    the identifier carries its tag.
+ *  - identifier "name-tag" (link, or the page's own form): we join that room; we are its
+ *    moderator only if we present its key (moderator link, or the key the page was given);
+ *  - bare name: we create OUR room, under a new tag.
  */
 function resolveRoom(request: JoinRequest, keys: RoomKeys): RoomTarget {
   const typed = request.room.trim();
@@ -37,14 +36,16 @@ function resolveRoom(request: JoinRequest, keys: RoomKeys): RoomTarget {
   const modKey = MOD_KEY_RE.test(request.mod) ? request.mod : '';
   const link = ROOM_ID_RE.exec(slug);
   if (link) {
-    return { roomId: slug, title: link[1] ?? slug, isModerator: modKey !== '' && keys.tagOf(modKey) === link[2] };
+    return {
+      roomId: slug,
+      title: request.title?.trim() || link[1] || slug,
+      isModerator: keys.matches(link[2], modKey),
+    };
   }
-  const key = modKey || keys.newKey().mod;
-  return {
-    roomId: `${slugifyRoomId(typed, ROOM_NAME_MAX)}-${keys.tagOf(key)}`,
-    title: typed,
-    isModerator: true,
-  };
+  // A bare name (no tag, no key to tell us one): we draw the tag. A key without a tag is one
+  // issued by the previous version of the page.
+  const tag = modKey ? keys.tagOf(modKey) : keys.newKey().tag;
+  return { roomId: `${slugifyRoomId(typed, ROOM_NAME_MAX)}-${tag}`, title: typed, isModerator: true };
 }
 
 /** Creates the room if it is not open, then returns the meeting address. */

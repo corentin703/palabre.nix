@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import type { ActiveRoom, GeneratedLinks, RoomsListing } from '../../shared/api';
 import { CopyField } from '../components/CopyField';
 import { ApiFailure, request } from '../api';
+import { CopyButton } from '../components/CopyButton';
 import { LocaleSwitcher, useI18n } from '../i18n';
 import { errorMessage } from '../i18n/errors';
 import '../styles/admin.css';
@@ -20,6 +21,18 @@ function formatDate(value: string, locale: string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+/** Invitation link and moderator link of a room, as copy buttons. */
+function RoomLinks({ roomId, mod }: { roomId: string; mod: string }) {
+  const { t } = useI18n();
+  const url = `${location.origin}/r/${roomId}`;
+  return (
+    <>
+      <CopyButton value={url} label={t.admin.copyInvitation} />
+      {mod && <CopyButton value={`${url}?m=${mod}`} label={t.admin.copyModerator} />}
+    </>
+  );
 }
 
 const isUnauthorized = (failure: unknown): boolean =>
@@ -229,6 +242,7 @@ export default function AdminPage({ brandName }: { brandName: string }) {
                   </td>
                   <td>{formatDate(room.created, locale)}</td>
                   <td className="actions">
+                    <RoomLinks roomId={room.roomId} mod={room.mod} />{' '}
                     <button className="ghost" onClick={() => joinAsModerator(room)}>
                       {t.admin.joinAsModerator}
                     </button>{' '}
@@ -252,6 +266,7 @@ export default function AdminPage({ brandName }: { brandName: string }) {
                 <th>{t.admin.participants}</th>
                 <th>{t.admin.created}</th>
                 <th>{t.admin.ended}</th>
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -261,6 +276,9 @@ export default function AdminPage({ brandName }: { brandName: string }) {
                   <td>{room.participants}</td>
                   <td className="muted">{formatDate(room.created, locale)}</td>
                   <td className="muted">{formatDate(room.ended, locale)}</td>
+                  <td className="actions">
+                    <RoomLinks roomId={room.roomId} mod={room.mod} />
+                  </td>
                 </tr>
               ))}
             </tbody>

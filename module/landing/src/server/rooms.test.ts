@@ -9,10 +9,19 @@ describe('createRoomKeys', () => {
     expect(tag).toMatch(/^[0-9a-f]{12}$/);
   });
 
-  it('finds the tag of a key, with the same secret only', () => {
+  it('derives the key from the tag, with the same secret only', () => {
     const { mod, tag } = createRoomKeys('secret').newKey();
-    expect(createRoomKeys('secret').tagOf(mod)).toBe(tag);
-    expect(createRoomKeys('autre secret').tagOf(mod)).not.toBe(tag);
+    expect(createRoomKeys('secret').modOf(tag)).toBe(mod);
+    expect(createRoomKeys('secret').matches(tag, mod)).toBe(true);
+    expect(createRoomKeys('autre secret').matches(tag, mod)).toBe(false);
+    expect(createRoomKeys('secret').matches(tag, '0'.repeat(32))).toBe(false);
+    expect(createRoomKeys('secret').matches(undefined, mod)).toBe(false);
+  });
+
+  it('still accepts a key issued before keys were derived from the tag', () => {
+    const keys = createRoomKeys('secret');
+    const legacyMod = 'a'.repeat(32);
+    expect(keys.matches(keys.tagOf(legacyMod), legacyMod)).toBe(true);
   });
 
   it('draws different keys', () => {

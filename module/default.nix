@@ -271,6 +271,48 @@ in
         default = null;
         description = "Logo (png, jpg, webp, svg or gif), shown on the page and used as its icon, and, with `pwa.enable`, resized by the server (on the first request, then kept in memory) into the installed app's icons: square and at least 512x512 recommended. Required by `pwa.enable`.";
       };
+      mail = {
+        host = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          example = "smtp.example.org";
+          description = ''
+            SMTP relay used to send room links by email (the "Get both links by email" form of
+            the landing page: one mail with the invitation link, one with the moderator link,
+            in the language chosen on the page). `null`: the form is not shown.
+          '';
+        };
+        port = mkOption {
+          type = types.nullOr types.port;
+          default = null;
+          description = "SMTP port. Default: 465 with `security = \"tls\"`, otherwise 587.";
+        };
+        security = mkOption {
+          type = types.enum [
+            "tls"
+            "starttls"
+            "none"
+          ];
+          default = "starttls";
+          description = "`tls`: encrypted from the start (port 465); `starttls`: upgraded after connecting (587); `none`: clear text, for a local relay only.";
+        };
+        user = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "SMTP login; `null` for a relay that needs none. Used with `passwordFile`.";
+        };
+        passwordFile = mkOption {
+          type = types.nullOr secretFile;
+          default = null;
+          description = "File containing the SMTP password (used with `user`).";
+        };
+        from = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          example = "visio@example.org";
+          description = "Sender address of the mails (shown with `landing.brandName` as its name). Required with `host`.";
+        };
+      };
       css = mkOption {
         type = types.lines;
         default = "";

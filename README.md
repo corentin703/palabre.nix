@@ -128,6 +128,27 @@ To add a language: add its code to `src/shared/locales.ts`, copy `src/web/i18n/e
 `src/web/i18n/index.tsx`, add its welcome message in `src/server/messages.ts`, and allow it in the
 `landing.defaultLocale` option. All paths are under `module/landing/`.
 
+## Sending the links by email
+
+With `landing.mail` set, the page offers to email the room's links to whoever created it: two
+separate mails, one with the invitation link (which can be forwarded as is) and one with the
+moderator link (with a warning not to forward it), written in the language chosen on the page.
+They reuse the landing page's look (white sheet, accent bar, `themeColor`, logo). The `/admin`
+panel gives both links of every room, open or past, with copy buttons.
+
+```nix
+services.palabre.landing.mail = {
+  host = "smtp.example.org";
+  security = "starttls";               # "tls" (465), "starttls" (587, default) or "none"
+  from = "visio@example.org";
+  user = "visio";
+  passwordFile = config.sops.secrets.palabre-smtp-password.path;
+};
+```
+
+The form only sends the links of a room to someone who holds its moderator key, at most 3 times a
+day to the same address.
+
 ## Customizing the landing page
 
 `landing.css` is injected in a `<style>` tag **after** the base stylesheet: it can redefine the

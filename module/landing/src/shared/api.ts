@@ -15,6 +15,8 @@ export type ErrorCode =
   | 'too_many_attempts'
   | 'unauthorized'
   | 'plugnmeet_failed'
+  | 'mail_failed'
+  | 'mail_disabled'
   | 'not_found';
 
 export interface ApiError {
@@ -33,6 +35,8 @@ export interface RuntimeConfig {
   hasCustomCss: boolean;
   /** The installable app is enabled (services.palabre.landing.pwa.enable). */
   pwa: boolean;
+  /** Links can be sent by email (services.palabre.landing.mail). */
+  mail: boolean;
 }
 
 /** Moderator key of a new room, and the public tag that identifies it. */
@@ -56,6 +60,8 @@ export interface JoinRequest {
   name: string;
   /** Moderator key; empty for a regular participant. */
   mod: string;
+  /** Name as typed (accents, capitals), for a new room; otherwise derived from the identifier. */
+  title?: string;
   /** Visitor's language: the room's welcome message and the language of the meeting. */
   locale: Locale;
 }
@@ -67,6 +73,8 @@ export interface JoinResponse {
 
 export interface ActiveRoom {
   roomId: string;
+  /** Moderator key of the room, to build its moderator link (empty if the identifier has no tag). */
+  mod: string;
   title: string;
   participants: string[];
   created: string;
@@ -74,6 +82,7 @@ export interface ActiveRoom {
 
 export interface PastRoom {
   roomId: string;
+  mod: string;
   title: string;
   participants: number;
   created: string;
@@ -89,4 +98,12 @@ export interface RoomsListing {
 export interface GeneratedLinks {
   roomId: string;
   mod: string;
+}
+
+export interface SendLinksRequest {
+  room: string;
+  /** Moderator key of the room: only its holder may have the links sent. */
+  mod: string;
+  email: string;
+  locale: Locale;
 }

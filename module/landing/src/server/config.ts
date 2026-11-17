@@ -1,5 +1,6 @@
 import { isLocale } from '../shared/locales.js';
 import type { Locale } from '../shared/locales.js';
+import type { SmtpConfig } from './smtp.js';
 
 /** Configuration read from the environment (see services.palabre.landing.* and landing.nix). */
 export interface Config {
@@ -25,6 +26,8 @@ export interface Config {
   backgroundColor: string;
   cssFile: string | undefined;
   logoFile: string | undefined;
+  /** Absent: the links cannot be sent by email. */
+  mail: SmtpConfig | undefined;
 }
 
 export class ConfigError extends Error {}
@@ -44,6 +47,24 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   if (!/^#[0-9a-f]{3,8}$/i.test(backgroundColor)) {
     throw new ConfigError('LANDING_BACKGROUND_COLOR must be a hexadecimal color such as #ffffff');
   }
+  const security = env['MAIL_SECURITY'] || 'starttls';
+  if (security !== 'tls' && security !== 'starttls' && security !== 'none') {
+    throw new ConfigError('MAIL_SECURITY must be tls, starttls or none');
+  }
+  const mailHost = env['MAIL_HOST'];
+  const mailFrom = env['MAIL_FROM'];
+  if (mailHost && !mailFrom) throw new ConfigError('MAIL_HOST requires MAIL_FROM');
+  const mail: SmtpConfig | undefined =
+    mailHost && mailFrom
+      ? {
+          host: mailHost,
+          port: Number(env['MAIL_PORT']) || (security === 'tls' ? 465 : 587),
+          security,
+          user: env['MAIL_USER'] || undefined,
+          password: env['MAIL_PASSWORD'] || undefined,
+          from: mailFrom,
+        }
+      : undefined;
   return {
     port: Number(env['PORT']) || 3000,
     bindHost: env['BIND_HOST'] || '0.0.0.0',
@@ -60,5 +81,6 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     backgroundColor,
     cssFile: env['LANDING_CSS_FILE'] || undefined,
     logoFile: env['LANDING_LOGO_FILE'] || undefined,
+    mail,
   };
 }

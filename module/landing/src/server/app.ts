@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { IncomingMessage, RequestListener, ServerResponse } from 'node:http';
-import type { JoinRequest, RoomInfo, RuntimeConfig } from '../shared/api.js';
+import type { JoinRequest, RoomInfo, RuntimeConfig, SendLinksRequest } from '../shared/api.js';
 import { isLocale } from '../shared/locales.js';
-import { MOD_KEY_RE, ROOM_ID_RE, slugifyRoomId } from '../shared/slug.js';
+import { ROOM_ID_RE, slugifyRoomId } from '../shared/slug.js';
 import { createAdminHandler } from './admin.js';
 import type { Config } from './config.js';
 import { sendFile, serveBuiltAsset } from './files.js';
@@ -12,6 +12,8 @@ import type { PwaIcons } from './pwa.js';
 import type { LoadedFile } from './files.js';
 import { HttpError, getClientIp, readJson, sendError, sendJson, sendText } from './http.js';
 import { joinRoom } from './join.js';
+import { invitationMails } from './mail.js';
+import { sendMail } from './smtp.js';
 import type { PnmApi } from './plugnmeet.js';
 import { createRoomKeys, roomLabel } from './rooms.js';
 import { RateLimiter } from './window-counter.js';
@@ -38,6 +40,9 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
   const joinLimiter = new RateLimiter(RATE_WINDOW_MS, 10);
   // Separate limiter for key creation (one per new room name typed).
   const keyLimiter = new RateLimiter(RATE_WINDOW_MS, 60);
+  // Mails: a few per IP, and a few per address, so the form is not a way to spam someone.
+  const mailIpLimiter = new RateLimiter(60 * 60 * 1000, 6);
+  const mailAddressLimiter = new RateLimiter(24 * 60 * 60 * 1000, 3);
   const admin = config.adminToken ? createAdminHandler({ pnm, config, adminToken: config.adminToken, keys }) : null;
   if (!admin) console.warn('ADMIN_TOKEN is not set: the /admin panel is disabled');
 
@@ -48,6 +53,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
     hasLogo: logo !== undefined,
     hasCustomCss: customCss !== undefined,
     pwa: config.pwa && pwaIcons !== undefined,
+    mail: config.mail !== undefined,
   };
 
   const manifestFile: LoadedFile = {
@@ -68,9 +74,37 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
       room: body.room,
       name: typeof body.name === 'string' ? body.name : '',
       mod: typeof body.mod === 'string' ? body.mod : '',
+      ...(typeof body.title === 'string' ? { title: body.title } : {}),
       locale: isLocale(body.locale) ? body.locale : config.defaultLocale,
     };
     sendJson(res, 200, await joinRoom(request, { pnm, config, keys }));
+  }
+
+  /** Sends the invitation link and the moderator link, in two mails, to the given address. */
+  async function sendLinksApi(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    if (!config.mail) throw new HttpError(404, 'mail_disabled');
+    const body = (await readJson(req, 4000)) as Partial<Record<keyof SendLinksRequest, unknown>> | null;
+    const room = typeof body?.room === 'string' ? slugifyRoomId(body.room) : '';
+    const mod = typeof body?.mod === 'string' ? body.mod : '';
+    const email = typeof body?.email === 'string' ? body.email.trim() : '';
+    if (!room || !/^[^\s@<>",;:]{1,64}@[^\s@<>",;:]{1,255}$/.test(email)) throw new HttpError(400, 'invalid_request');
+    // Only the holder of the moderator key may have the links sent (they contain it).
+    if (!roomInfo(new URL(`http://x/?room=${encodeURIComponent(room)}&m=${encodeURIComponent(mod)}`))?.moderator) {
+      throw new HttpError(400, 'invalid_request');
+    }
+    if (mailIpLimiter.hit(getClientIp(req)) || mailAddressLimiter.hit(email.toLowerCase())) {
+      throw new HttpError(429, 'rate_limited');
+    }
+    const locale = isLocale(body?.locale) ? body.locale : config.defaultLocale;
+    try {
+      for (const mail of invitationMails(config, { roomId: room, label: roomLabel(room), mod, locale, to: email })) {
+        await sendMail(config.mail, mail);
+      }
+    } catch (err) {
+      console.error('sending the links failed:', err instanceof Error ? err.message : err);
+      throw new HttpError(502, 'mail_failed');
+    }
+    sendJson(res, 200, { ok: true });
   }
 
   /** Room of a /r/<room>?m=<key> link: the key's tag must be the room's tag. */
@@ -79,7 +113,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
     if (!room) return null;
     const mod = url.searchParams.get('m') ?? '';
     const tag = ROOM_ID_RE.exec(room)?.[2];
-    return { room, label: roomLabel(room), moderator: MOD_KEY_RE.test(mod) && tag === keys.tagOf(mod) };
+    return { room, label: roomLabel(room), moderator: keys.matches(tag, mod) };
   }
 
   async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -136,6 +170,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
       return sendJson(res, 200, info);
     }
     if (req.method === 'POST' && pathname === '/visio-api/join') return joinApi(req, res);
+    if (req.method === 'POST' && pathname === '/visio-api/send-links') return sendLinksApi(req, res);
 
     // Pages: the home page, and a room (shareable link or moderator link).
     if (get && (pathname === '/' || pathname === '/join')) {

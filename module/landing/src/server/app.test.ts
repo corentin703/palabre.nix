@@ -7,6 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { createApp } from './app';
 import type { AppDeps } from './app';
 import { createPwaIcons } from './pwa';
+import * as smtp from './smtp';
 import { loadConfig } from './config';
 import type { PnmApi } from './plugnmeet';
 
@@ -86,6 +87,7 @@ describe('files and pages', () => {
       hasLogo: false,
       hasCustomCss: true,
       pwa: false,
+      mail: false,
     });
     expect((await fetch(`${base}/visio-assets/custom.css`)).headers.get('content-type')).toContain('text/css');
     expect((await fetch(`${base}/visio-assets/logo`)).status).toBe(404);
@@ -126,7 +128,7 @@ describe('files and pages', () => {
 describe('POST /visio-api/join', () => {
   it('creates the room and returns the meeting address, in the requested language', async () => {
     const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
-    const response = await postJson('/visio-api/join', { room: 'Réunion Bureau', name: 'Camille', mod, locale: 'en' });
+    const response = await postJson('/visio-api/join', { room: `reunion-bureau-${tag}`, title: 'Réunion Bureau', name: 'Camille', mod, locale: 'en' });
     const { url } = (await response.json()) as { url: string };
 
     expect(response.status).toBe(200);
@@ -181,6 +183,61 @@ describe('GET /visio-api/room-info', () => {
   });
 });
 
+describe('POST /visio-api/send-links', () => {
+  const sent: { to: string; subject: string; text: string; html: string }[] = [];
+  const mailEnv = { MAIL_HOST: 'smtp.example', MAIL_FROM: 'visio@example.org' };
+
+  beforeEach(async () => {
+    sent.length = 0;
+    vi.spyOn(smtp, 'sendMail').mockImplementation(async (_config, mail) => void sent.push(mail));
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await start(mailEnv);
+  });
+
+  const key = async () => (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
+
+  it('sends two mails: the invitation link, then the moderator link, in the page’s language', async () => {
+    const { mod, tag } = await key();
+    const response = await postJson('/visio-api/send-links', { room: `salon-${tag}`, mod, email: 'camille@example.org', locale: 'en' });
+    expect(response.status).toBe(200);
+    expect(sent.map((m) => m.to)).toEqual(['camille@example.org', 'camille@example.org']);
+    expect(sent[0]?.text).toContain(`https://visio.example/r/salon-${tag}\n`);
+    expect(sent[0]?.text).not.toContain(mod);
+    expect(sent[1]?.text).toContain(`https://visio.example/r/salon-${tag}?m=${mod}`);
+    expect(sent[1]?.subject).toContain('moderator link');
+    expect(sent[1]?.text).toContain('do NOT forward');
+  });
+
+  it('refuses a key that is not the room’s, a malformed address, and a server without mail', async () => {
+    const { tag } = await key();
+    const other = await key();
+    expect((await postJson('/visio-api/send-links', { room: `salon-${tag}`, mod: other.mod, email: 'a@b.fr' })).status).toBe(400);
+    expect((await postJson('/visio-api/send-links', { room: `salon-${tag}`, mod: 'x', email: 'pas un mail' })).status).toBe(400);
+    expect(sent).toEqual([]);
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await start();
+    const disabled = await postJson('/visio-api/send-links', { room: 'salon', mod: 'x', email: 'a@b.fr' });
+    expect([disabled.status, await disabled.json()]).toEqual([404, { code: 'mail_disabled' }]);
+  });
+
+  it('limits the mails sent to one address', async () => {
+    const statuses: number[] = [];
+    for (let i = 0; i < 4; i++) {
+      const { mod, tag } = await key();
+      statuses.push((await postJson('/visio-api/send-links', { room: `salon-${tag}`, mod, email: 'camille@example.org' })).status);
+    }
+    expect(statuses).toEqual([200, 200, 200, 429]);
+  });
+
+  it('reports a failure of the mail relay with a code', async () => {
+    vi.mocked(smtp.sendMail).mockRejectedValueOnce(new Error('relay down'));
+    vi.spyOn(console, 'error').mockImplementationOnce(() => undefined);
+    const { mod, tag } = await key();
+    const response = await postJson('/visio-api/send-links', { room: `salon-${tag}`, mod, email: 'a@b.fr' });
+    expect([response.status, await response.json()]).toEqual([502, { code: 'mail_failed' }]);
+  });
+});
+
 describe('administration panel', () => {
   const login = (token: string, headers: Record<string, string> = {}) => postJson('/admin/login', { token }, headers);
 
@@ -214,6 +271,19 @@ describe('administration panel', () => {
     expect(await info.json()).toMatchObject({ moderator: true });
     expect((await ask('!!!')).status).toBe(400);
     expect((await postJson('/admin/api/links', { name: 'x' })).status).toBe(401);
+  });
+
+  it('gives the moderator key of each room, to build its link', async () => {
+    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
+    vi.mocked(pnm.getActiveRoomsInfo).mockResolvedValueOnce({
+      status: true,
+      rooms: [{ roomInfo: { roomId: `salon-${tag}`, roomTitle: 'salon', sid: 's', creationTime: '1' }, participantsInfo: [] }],
+    } as never);
+    const rooms = (await (await fetch(`${base}/admin/api/rooms`, { headers: { cookie } })).json()) as {
+      active: { roomId: string; mod: string }[];
+    };
+    expect(rooms.active).toMatchObject([{ roomId: `salon-${tag}`, mod }]);
   });
 
   it('refuses a request that changes something without being JSON from this same site', async () => {
