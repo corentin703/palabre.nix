@@ -41,3 +41,25 @@ describe('PWA settings', () => {
     expect(() => loadConfig({ ...base, LANDING_BACKGROUND_COLOR: '-write /x' })).toThrow('hexadecimal');
   });
 });
+
+describe('mail settings', () => {
+  const base = { PLUGNMEET_HOST: 'https://v.example', PLUGNMEET_API_KEY: 'k', PLUGNMEET_SECRET: 's' };
+  const mail = { ...base, MAIL_HOST: 'smtp.example', MAIL_FROM: 'visio@example.org' };
+
+  it('is off without a host, and needs a sender with one', () => {
+    expect(loadConfig(base).mail).toBeUndefined();
+    expect(() => loadConfig({ ...base, MAIL_HOST: 'smtp.example' })).toThrow('MAIL_FROM');
+  });
+
+  it('defaults to STARTTLS on 587, and to port 465 with TLS', () => {
+    expect(loadConfig(mail).mail).toMatchObject({ security: 'starttls', port: 587 });
+    expect(loadConfig({ ...mail, MAIL_SECURITY: 'tls' }).mail).toMatchObject({ security: 'tls', port: 465 });
+  });
+
+  it('accepts the other usual names of the security modes', () => {
+    expect(loadConfig({ ...mail, MAIL_SECURITY: 'force_tls' }).mail?.security).toBe('tls');
+    expect(loadConfig({ ...mail, MAIL_SECURITY: 'SSL' }).mail?.security).toBe('tls');
+    expect(loadConfig({ ...mail, MAIL_SECURITY: 'off' }).mail?.security).toBe('none');
+    expect(() => loadConfig({ ...mail, MAIL_SECURITY: 'maybe' })).toThrow('MAIL_SECURITY');
+  });
+});

@@ -47,10 +47,17 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   if (!/^#[0-9a-f]{3,8}$/i.test(backgroundColor)) {
     throw new ConfigError('LANDING_BACKGROUND_COLOR must be a hexadecimal color such as #ffffff');
   }
-  const security = env['MAIL_SECURITY'] || 'starttls';
-  if (security !== 'tls' && security !== 'starttls' && security !== 'none') {
-    throw new ConfigError('MAIL_SECURITY must be tls, starttls or none');
-  }
+  // Usual spellings of the same three modes (Vaultwarden's "force_tls" and "off", for instance).
+  const securityNames: Record<string, SmtpConfig['security']> = {
+    tls: 'tls',
+    ssl: 'tls',
+    force_tls: 'tls',
+    starttls: 'starttls',
+    none: 'none',
+    off: 'none',
+  };
+  const security = securityNames[(env['MAIL_SECURITY'] || 'starttls').trim().toLowerCase()];
+  if (!security) throw new ConfigError('MAIL_SECURITY must be tls, starttls or none');
   const mailHost = env['MAIL_HOST'];
   const mailFrom = env['MAIL_FROM'];
   if (mailHost && !mailFrom) throw new ConfigError('MAIL_HOST requires MAIL_FROM');

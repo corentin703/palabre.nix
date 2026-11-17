@@ -41,6 +41,24 @@ let
   logoExt = lib.last (lib.splitString "." (baseNameOf (toString lcfg.logo)));
   logoTarget = "/etc/palabre/logo.${logoExt}";
 
+  # Mail settings: each one is a plain value or a file (see the options); files go through the
+  # rendered configuration (`@NAME@` filled at start), values through the environment.
+  mailEnv = {
+    host = "MAIL_HOST";
+    port = "MAIL_PORT";
+    security = "MAIL_SECURITY";
+    user = "MAIL_USER";
+    password = "MAIL_PASSWORD";
+    from = "MAIL_FROM";
+  };
+  mailFile = name: lcfg.mail.${name + "File"};
+  mailValue = name: lcfg.mail.${name} or null;
+  mailSet = name: mailValue name != null || mailFile name != null;
+  mailNames = lib.attrNames mailEnv;
+  mailEnabled = mailSet "host";
+  mailFiles = lib.filter (name: mailFile name != null) mailNames;
+  mailValues = lib.filter (name: mailValue name != null) mailNames;
+
 in
 {
   config = lib.mkIf cfg.enable {
@@ -50,12 +68,16 @@ in
         message = "services.palabre.landing.pwa.enable requires services.palabre.landing.logo: the installed app's icons are made from it.";
       }
       {
-        assertion = lcfg.mail.host == null || lcfg.mail.from != null;
-        message = "services.palabre.landing.mail.from is required with services.palabre.landing.mail.host.";
+        assertion = lib.all (name: !(mailValue name != null && mailFile name != null)) mailNames;
+        message = "services.palabre.landing.mail: give each setting either as a value or as a file (<name>File), not both.";
       }
       {
-        assertion = (lcfg.mail.user == null) == (lcfg.mail.passwordFile == null);
-        message = "services.palabre.landing.mail.user and services.palabre.landing.mail.passwordFile go together.";
+        assertion = !mailEnabled || mailSet "from";
+        message = "services.palabre.landing.mail.from (or fromFile) is required with a mail host.";
+      }
+      {
+        assertion = mailSet "user" == mailSet "password";
+        message = "services.palabre.landing.mail: user (or userFile) and passwordFile go together.";
       }
     ];
 
@@ -66,7 +88,7 @@ in
         PLUGNMEET_API_SECRET = cfg.secrets.plugnmeetApiSecretFile;
         ADMIN_TOKEN = cfg.secrets.adminTokenFile;
       }
-      // lib.optionalAttrs (lcfg.mail.passwordFile != null) { MAIL_PASSWORD = lcfg.mail.passwordFile; };
+      // lib.listToAttrs (map (name: lib.nameValuePair mailEnv.${name} (mailFile name)) mailFiles);
       content = ''
         PORT=${toString cfg.ports.landing}
         BIND_HOST=127.0.0.1
@@ -78,9 +100,7 @@ in
         LANDING_THEME_COLOR=${lcfg.themeColor}
         LANDING_DEFAULT_LOCALE=${lcfg.defaultLocale}
       ''
-      + lib.optionalString (lcfg.mail.passwordFile != null) ''
-        MAIL_PASSWORD=@MAIL_PASSWORD@
-      '';
+      + lib.concatMapStrings (name: "${mailEnv.${name}}=@${mailEnv.${name}}@\n") mailFiles;
     };
 
     virtualisation.oci-containers.containers.palabre-landing = {
@@ -99,15 +119,7 @@ in
         }
         // lib.optionalAttrs (lcfg.pwa.shortName != null) { LANDING_SHORT_NAME = lcfg.pwa.shortName; }
       )
-      // lib.optionalAttrs (lcfg.mail.host != null) (
-        {
-          MAIL_HOST = lcfg.mail.host;
-          MAIL_SECURITY = lcfg.mail.security;
-          MAIL_FROM = lcfg.mail.from;
-        }
-        // lib.optionalAttrs (lcfg.mail.port != null) { MAIL_PORT = toString lcfg.mail.port; }
-        // lib.optionalAttrs (lcfg.mail.user != null) { MAIL_USER = lcfg.mail.user; }
-      )
+      // lib.listToAttrs (map (name: lib.nameValuePair mailEnv.${name} (toString (mailValue name))) mailValues)
       // lib.optionalAttrs hasCss { LANDING_CSS_FILE = "/etc/palabre/custom.css"; }
       // lib.optionalAttrs (lcfg.logo != null) { LANDING_LOGO_FILE = logoTarget; };
       environmentFiles = [

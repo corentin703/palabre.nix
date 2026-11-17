@@ -146,6 +146,10 @@ services.palabre.landing.mail = {
 };
 ```
 
+Each setting (`host`, `port`, `security`, `user`, `from`) can also be given as the path of a
+file holding it (`hostFile`, `portFile`, `securityFile`, `userFile`, `fromFile`), for credentials
+already kept in a secrets manager. `securityFile` also understands `ssl`, `force_tls` and `off`.
+
 The form only sends the links of a room to someone who holds its moderator key, at most 3 times a
 day to the same address.
 

@@ -149,6 +149,11 @@ services.palabre.landing.mail = {
 };
 ```
 
+Chaque réglage (`host`, `port`, `security`, `user`, `from`) peut aussi être donné sous la forme du
+chemin d'un fichier qui le contient (`hostFile`, `portFile`, `securityFile`, `userFile`,
+`fromFile`), pour des identifiants déjà gérés par un gestionnaire de secrets. `securityFile`
+comprend aussi `ssl`, `force_tls` et `off`.
+
 Le formulaire n'envoie les liens d'un salon qu'à qui détient sa clé de modérateur, et au plus 3
 fois par jour vers la même adresse.
 
