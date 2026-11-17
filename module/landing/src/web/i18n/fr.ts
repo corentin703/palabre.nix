@@ -121,6 +121,9 @@ export const fr = {
     noActiveRoom: 'Aucune salle ouverte.',
     noPastRoom: 'Aucune salle terminée.',
     joinAsModerator: 'Rejoindre en modérateur',
+    observe: 'Observer en incognito',
+    observeHelp:
+      'Rejoint la réunion sans être vu des participants (absent de la liste), sans caméra, micro, partage d’écran ni chat.',
     copyInvitation: 'Copier le lien d’invitation',
     copyModerator: 'Copier le lien modérateur',
     copied: 'Copié',

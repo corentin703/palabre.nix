@@ -50,12 +50,39 @@ export async function createJoinUrl(
   pnm: PnmApi,
   config: Config,
   roomId: string,
-  user: { name: string; isAdmin: boolean },
+  user: { name: string; isAdmin: boolean; observer?: boolean },
   locale: Locale,
 ): Promise<string> {
   const request = createRequest(GenerateTokenReqSchema, {
     roomId,
-    userInfo: { name: user.name, userId: crypto.randomUUID(), isAdmin: user.isAdmin, isHidden: false },
+    userInfo: {
+      name: user.name,
+      userId: crypto.randomUUID(),
+      isAdmin: user.isAdmin,
+      isHidden: user.observer === true,
+      // An observer is invisible to the others (isHidden) and, as a precaution, cannot do
+      // anything by mistake: no microphone, camera, screen sharing, chat message or file.
+      ...(user.observer
+        ? {
+            userMetadata: {
+              isAdmin: false,
+              isPresenter: false,
+              waitForApproval: false,
+              lockSettings: {
+                lockMicrophone: true,
+                lockWebcam: true,
+                lockScreenSharing: true,
+                lockChatSendMessage: true,
+                lockChatFileShare: true,
+                lockPrivateChat: true,
+                lockWhiteboard: true,
+                lockSharedNotepad: true,
+                lockReactions: true,
+              },
+            },
+          }
+        : {}),
+    },
   });
   const response = await pnm.getJoinToken(request);
   if (!response.status || !response.token) throw new Error(response.msg || 'getJoinToken failed');

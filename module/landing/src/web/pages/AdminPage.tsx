@@ -102,13 +102,16 @@ export default function AdminPage({ brandName }: { brandName: string }) {
     }
   }
 
-  function joinAsModerator(room: ActiveRoom) {
+  function joinAsModerator(room: ActiveRoom, observer = false) {
     // The tab is opened right away (the person's click) so the popup blocker does not stop it,
     // then receives its address once the token is ready.
     const tab = window.open('', '_blank');
     void act(async () => {
       try {
-        const { url } = await request<{ url: string }>('/admin/api/rooms/join', { roomId: room.roomId, locale });
+        const { url } = await request<{ url: string }>(observer ? '/admin/api/rooms/observe' : '/admin/api/rooms/join', {
+          roomId: room.roomId,
+          locale,
+        });
         if (tab) tab.location.href = url;
         else location.href = url;
       } catch (failure) {
@@ -245,6 +248,9 @@ export default function AdminPage({ brandName }: { brandName: string }) {
                     <RoomLinks roomId={room.roomId} mod={room.mod} />{' '}
                     <button className="ghost" onClick={() => joinAsModerator(room)}>
                       {t.admin.joinAsModerator}
+                    </button>{' '}
+                    <button className="ghost" onClick={() => joinAsModerator(room, true)} title={t.admin.observeHelp}>
+                      {t.admin.observe}
                     </button>{' '}
                     <button onClick={() => closeRoom(room)}>{t.admin.closeRoom}</button>
                   </td>

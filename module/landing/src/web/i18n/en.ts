@@ -119,6 +119,9 @@ export const en: Messages = {
     noActiveRoom: 'No open room.',
     noPastRoom: 'No past room.',
     joinAsModerator: 'Join as moderator',
+    observe: 'Observe incognito',
+    observeHelp:
+      'Joins the meeting without being seen by the participants (absent from the list), with no camera, microphone, screen sharing or chat.',
     copyInvitation: 'Copy invitation link',
     copyModerator: 'Copy moderator link',
     copied: 'Copied',

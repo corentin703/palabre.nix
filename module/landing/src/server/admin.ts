@@ -178,7 +178,12 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
         return true;
       }
 
-      if (isPost && (pathname === '/admin/api/rooms/join' || pathname === '/admin/api/rooms/end')) {
+      if (
+        isPost &&
+        (pathname === '/admin/api/rooms/join' ||
+          pathname === '/admin/api/rooms/observe' ||
+          pathname === '/admin/api/rooms/end')
+      ) {
         if (!isSafeMutation(req)) return sendError(res, 400, 'invalid_request');
         const request = await readRoomRequest(req);
         if (!request) return sendError(res, 400, 'invalid_room');
@@ -187,6 +192,17 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
         if (pathname === '/admin/api/rooms/join') {
           const url = await createJoinUrl(pnm, config, roomId, { name: adminName(locale), isAdmin: true }, locale);
           console.log(`admin joined room ${roomId} as moderator (from ${ip})`);
+          sendJson(res, 200, { url });
+        } else if (pathname === '/admin/api/rooms/observe') {
+          // Incognito: hidden from the participants, and unable to speak, film or write.
+          const url = await createJoinUrl(
+            pnm,
+            config,
+            roomId,
+            { name: adminName(locale), isAdmin: false, observer: true },
+            locale,
+          );
+          console.log(`admin joined room ${roomId} as an invisible observer (from ${ip})`);
           sendJson(res, 200, { url });
         } else {
           const result = await pnm.endRoom(createRequest(RoomEndReqSchema, { roomId }));

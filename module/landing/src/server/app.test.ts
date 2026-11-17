@@ -13,7 +13,11 @@ import type { PnmApi } from './plugnmeet';
 
 // The whole server, with a fake PlugNMeet: we look at what it asks it and what it answers.
 
-const calls: { tokens: { roomId: string; isAdmin: boolean }[]; created: string[] } = { tokens: [], created: [] };
+const calls: {
+  tokens: { roomId: string; isAdmin: boolean }[];
+  created: string[];
+  userInfos: { isAdmin?: boolean; isHidden?: boolean; userMetadata?: { lockSettings?: Record<string, boolean> } }[];
+} = { tokens: [], created: [], userInfos: [] };
 
 const pnm = {
   isRoomActive: vi.fn(async () => ({ status: true, isActive: false })),
@@ -21,7 +25,8 @@ const pnm = {
     calls.created.push(request.roomId);
     return { status: true };
   }),
-  getJoinToken: vi.fn(async (request: { roomId: string; userInfo?: { isAdmin?: boolean } }) => {
+  getJoinToken: vi.fn(async (request: { roomId: string; userInfo?: (typeof calls.userInfos)[number] }) => {
+    if (request.userInfo) calls.userInfos.push(request.userInfo);
     calls.tokens.push({ roomId: request.roomId, isAdmin: request.userInfo?.isAdmin ?? false });
     return { status: true, token: 'jeton' };
   }),
@@ -72,6 +77,7 @@ beforeAll(() => {
 beforeEach(async () => {
   calls.tokens.length = 0;
   calls.created.length = 0;
+  calls.userInfos.length = 0;
   await start();
   return () => new Promise<void>((resolve) => server.close(() => resolve()));
 });
@@ -284,6 +290,16 @@ describe('administration panel', () => {
       active: { roomId: string; mod: string }[];
     };
     expect(rooms.active).toMatchObject([{ roomId: `salon-${tag}`, mod }]);
+  });
+
+  it('joins a room as an invisible observer: hidden, not a moderator, with everything locked', async () => {
+    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    const response = await postJson('/admin/api/rooms/observe', { roomId: 'salon-0123456789ab', locale: 'fr' }, { cookie });
+    expect([response.status, await response.json()]).toEqual([200, { url: 'https://visio.example/?access_token=jeton&lng=fr-FR' }]);
+    const observer = calls.userInfos[0];
+    expect(observer).toMatchObject({ isAdmin: false, isHidden: true });
+    expect(observer?.userMetadata?.lockSettings).toMatchObject({ lockMicrophone: true, lockWebcam: true, lockScreenSharing: true });
+    expect((await postJson('/admin/api/rooms/observe', { roomId: 'salon-0123456789ab' })).status).toBe(401);
   });
 
   it('refuses a request that changes something without being JSON from this same site', async () => {
