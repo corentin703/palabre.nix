@@ -27,6 +27,18 @@ export interface Mail {
 
 const TIMEOUT_MS = 15_000;
 
+/** The relay refused the recipient for good (5xx: unknown mailbox, invalid address...). */
+export class RecipientRejected extends Error {}
+
+class SmtpReplyError extends Error {
+  constructor(
+    readonly code: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 const clean = (value: string): string => value.replace(/[\r\n]+/g, ' ').trim();
 const encodeWord = (value: string): string => `=?UTF-8?B?${Buffer.from(clean(value)).toString('base64')}?=`;
 const wrap64 = (data: string): string => Buffer.from(data).toString('base64').replace(/(.{76})/g, '$1\r\n');
@@ -107,7 +119,7 @@ export async function sendMail(config: SmtpConfig, mail: Mail): Promise<void> {
   const expect = async (accepted: number[], send?: string): Promise<string> => {
     if (send !== undefined) socket.write(`${send}\r\n`);
     const reply = await replies.next();
-    if (!accepted.includes(reply.code)) throw new Error(`SMTP: unexpected reply "${reply.text}"`);
+    if (!accepted.includes(reply.code)) throw new SmtpReplyError(reply.code, `SMTP: unexpected reply "${reply.text}"`);
     return reply.text;
   };
 
@@ -128,7 +140,12 @@ export async function sendMail(config: SmtpConfig, mail: Mail): Promise<void> {
       await expect([235], `AUTH PLAIN ${credentials}`);
     }
     await expect([250], `MAIL FROM:<${clean(config.from)}>`);
-    await expect([250, 251], `RCPT TO:<${clean(mail.to)}>`);
+    try {
+      await expect([250, 251], `RCPT TO:<${clean(mail.to)}>`);
+    } catch (err) {
+      if (err instanceof SmtpReplyError && err.code >= 500) throw new RecipientRejected(err.message);
+      throw err;
+    }
     await expect([354], 'DATA');
     // Dot-stuffing: a line starting with "." would end the message.
     const body = buildMessage(mail, config.from, config.host).replace(/^\./gm, '..');

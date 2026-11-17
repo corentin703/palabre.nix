@@ -6,6 +6,7 @@ import type { RoomKey } from '../shared/api';
 const ROOMS_KEY = 'visio:rooms';
 const HISTORY_KEY = 'visio:history';
 const NAME_KEY = 'visio:name';
+const EMAILS_KEY = 'visio:emails';
 const HISTORY_SIZE = 10;
 
 function read<T>(key: string, fallback: T): T {
@@ -65,3 +66,20 @@ export function clearHistory(): void {
 
 export const loadName = (): string => read<string>(NAME_KEY, '');
 export const saveName = (name: string): void => write(NAME_KEY, name);
+
+// // --- Email addresses the links were successfully sent to --------------------------------------
+
+const EMAILS_MAX = 5;
+
+/** The latest addresses (newest first), at most EMAILS_MAX. */
+export function loadEmails(): string[] {
+  return read<unknown[]>(EMAILS_KEY, []).filter((e): e is string => typeof e === 'string' && e !== '').slice(0, EMAILS_MAX);
+}
+
+/** To call once the links were sent without error: the address goes first, without duplicate. */
+export function rememberEmail(email: string): void {
+  const address = email.trim();
+  if (!address) return;
+  const others = loadEmails().filter((e) => e.toLowerCase() !== address.toLowerCase());
+  write(EMAILS_KEY, [address, ...others].slice(0, EMAILS_MAX));
+}

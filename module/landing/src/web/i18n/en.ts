@@ -43,6 +43,7 @@ export const en: Messages = {
     copied: 'Link copied',
     emailLabel: 'Get both links by email',
     emailPlaceholder: 'for example: camille@example.com',
+    emailHistory: 'Previously used addresses',
     emailSend: 'Send',
     emailSending: 'Sending…',
     emailSent: 'Emails sent: one with the invitation link, one with your moderator link.',
@@ -146,6 +147,10 @@ export const en: Messages = {
     unauthorized: 'Not signed in.',
     plugnmeet_failed: 'The PlugNMeet API failed',
     not_found: 'Not found.',
+    invalid_email: 'Invalid email address.',
+    mail_rejected: 'The mail server refused this address; please check that it is correct.',
+    mail_partial:
+      'Only one of the two emails could be sent (the invitation link). Please try again: you will receive both again.',
     mail_failed: 'The emails could not be sent; please try again later.',
     mail_disabled: 'Sending by email is not available.',
     network: 'The server does not answer; please try again.',

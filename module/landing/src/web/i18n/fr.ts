@@ -45,6 +45,7 @@ export const fr = {
     copied: 'Lien copié',
     emailLabel: 'Recevoir les deux liens par courriel',
     emailPlaceholder: 'par exemple : camille@exemple.fr',
+    emailHistory: 'Adresses utilisées précédemment',
     emailSend: 'Envoyer',
     emailSending: 'Envoi…',
     emailSent: 'Courriels envoyés : un avec le lien d’invitation, un avec votre lien de modérateur.',
@@ -149,6 +150,11 @@ export const fr = {
     unauthorized: 'Non authentifié.',
     plugnmeet_failed: "L'API PlugNMeet a échoué",
     not_found: 'Introuvable.',
+    invalid_email: 'Adresse de courriel invalide.',
+    mail_rejected:
+      "Le serveur de messagerie a refusé cette adresse ; veuillez vérifier qu'elle est correcte.",
+    mail_partial:
+      "Un seul des deux courriels a pu être envoyé (le lien d'invitation). Veuillez réessayer : vous recevrez à nouveau les deux.",
     mail_failed: "L'envoi des courriels a échoué ; veuillez réessayer ultérieurement.",
     mail_disabled: "L'envoi par courriel n'est pas disponible.",
     network: 'Le serveur ne répond pas ; veuillez réessayer.',

@@ -1,7 +1,7 @@
 import * as net from 'node:net';
 import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
-import { buildMessage, sendMail } from './smtp';
+import { RecipientRejected, buildMessage, sendMail } from './smtp';
 
 // A tiny SMTP server that records what the client says.
 let server: net.Server;
@@ -63,7 +63,7 @@ describe('sendMail', () => {
     const { port } = server.address() as AddressInfo;
     await expect(
       sendMail({ host: '127.0.0.1', port, security: 'none', user: undefined, password: undefined, from: 'a@b.fr' }, mail),
-    ).rejects.toThrow(/550/);
+    ).rejects.toThrow(RecipientRejected);
   });
 });
 

@@ -235,6 +235,20 @@ describe('POST /visio-api/send-links', () => {
     expect(statuses).toEqual([200, 200, 200, 429]);
   });
 
+  it('tells a refused address, a malformed one and a half-sent pair apart', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { mod, tag } = await key();
+    const ask = (email: string) => postJson('/visio-api/send-links', { room: `salon-${tag}`, mod, email });
+
+    expect([(await ask('pas un mail')).status, await (await ask('a b@c.fr')).json()]).toEqual([400, { code: 'invalid_email' }]);
+
+    vi.mocked(smtp.sendMail).mockRejectedValueOnce(new smtp.RecipientRejected('550 no such user'));
+    expect(await (await ask('inconnu@example.org')).json()).toEqual({ code: 'mail_rejected' });
+
+    vi.mocked(smtp.sendMail).mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('relay down'));
+    expect(await (await ask('camille@example.org')).json()).toEqual({ code: 'mail_partial' });
+  });
+
   it('reports a failure of the mail relay with a code', async () => {
     vi.mocked(smtp.sendMail).mockRejectedValueOnce(new Error('relay down'));
     vi.spyOn(console, 'error').mockImplementationOnce(() => undefined);

@@ -16,6 +16,9 @@ export type ErrorCode =
   | 'unauthorized'
   | 'plugnmeet_failed'
   | 'mail_failed'
+  | 'mail_partial'
+  | 'mail_rejected'
+  | 'invalid_email'
   | 'mail_disabled'
   | 'not_found';
 

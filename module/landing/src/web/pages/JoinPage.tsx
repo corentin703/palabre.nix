@@ -5,6 +5,7 @@ import { ROOM_ID_RE, ROOM_NAME_MAX, slugifyRoomId } from '../../shared/slug';
 import { getRoomInfo, getRoomKey, joinRoom, sendLinks } from '../api';
 import { Guide } from '../components/Guide';
 import { InstallBanner } from '../components/InstallBanner';
+import { EmailHistory } from '../components/EmailHistory';
 import { History } from '../components/History';
 import { ShareLinks } from '../components/ShareLinks';
 import { LocaleSwitcher, useI18n } from '../i18n';
@@ -13,8 +14,10 @@ import {
   clearHistory,
   findRoomKey,
   loadHistory,
+  loadEmails,
   loadName,
   rememberMeeting,
+  rememberEmail,
   saveName,
   saveRoomKey,
 } from '../room-storage';
@@ -86,7 +89,8 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
   const [status, setStatus] = useState<'idle' | 'preparing' | 'connecting'>('idle');
   const [error, setError] = useState('');
   const [askMail, setAskMail] = useState<{ roomId: string; mod: string } | null>(null);
-  const [mailAddress, setMailAddress] = useState('');
+  const [mailHistory, setMailHistory] = useState(loadEmails);
+  const [mailAddress, setMailAddress] = useState(() => loadEmails()[0] ?? '');
   const [mailSent, setMailSent] = useState(false);
   /** Room whose links were already sent (by the question or by the form under the links): no need to ask again. */
   const [mailedRoom, setMailedRoom] = useState('');
@@ -169,7 +173,9 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
     setError('');
     setStatus('connecting');
     try {
-      await sendLinks({ room: askMail.roomId, mod: askMail.mod, email: mailAddress, locale });
+      await sendLinks({ room: askMail.roomId, mod: askMail.mod, email: mailAddress.trim(), locale });
+      rememberEmail(mailAddress);
+      setMailHistory(loadEmails());
     } catch (failure) {
       // The person stays on the question: they can fix the address, or enter without mail.
       setError(errorMessage(t, failure));
@@ -224,9 +230,19 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
                 autoComplete="email"
                 placeholder={t.share.emailPlaceholder}
                 value={mailAddress}
-                onChange={(e) => setMailAddress(e.target.value)}
+                onChange={(e) => {
+                  setMailAddress(e.target.value);
+                  setError('');
+                }}
               />
             </div>
+            <EmailHistory
+              emails={mailHistory}
+              onPick={(picked) => {
+                setMailAddress(picked);
+                setError('');
+              }}
+            />
             {mailSent && (
               <p className="banner" role="status">
                 {t.share.emailSent}

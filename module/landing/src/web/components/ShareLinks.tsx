@@ -3,6 +3,8 @@ import type { FormEvent } from 'react';
 import { sendLinks } from '../api';
 import { useI18n } from '../i18n';
 import { errorMessage } from '../i18n/errors';
+import { loadEmails, rememberEmail } from '../room-storage';
+import { EmailHistory } from './EmailHistory';
 import { CopyField } from './CopyField';
 
 interface Props {
@@ -39,7 +41,8 @@ export function ShareLinks({ roomId, mod, mail = false, onMailSent }: Props) {
 /** "Send me the links": two separate mails, one with the invitation link, one with the moderator link. */
 function EmailLinks({ roomId, mod, onSent }: { roomId: string; mod: string; onSent?: () => void }) {
   const { t, locale } = useI18n();
-  const [email, setEmail] = useState('');
+  const [history, setHistory] = useState(loadEmails);
+  const [email, setEmail] = useState(() => loadEmails()[0] ?? '');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState('');
 
@@ -48,7 +51,9 @@ function EmailLinks({ roomId, mod, onSent }: { roomId: string; mod: string; onSe
     setError('');
     setStatus('sending');
     try {
-      await sendLinks({ room: roomId, mod, email, locale });
+      await sendLinks({ room: roomId, mod, email: email.trim(), locale });
+      rememberEmail(email);
+      setHistory(loadEmails());
       setStatus('sent');
       onSent?.();
     } catch (failure) {
@@ -71,12 +76,21 @@ function EmailLinks({ roomId, mod, onSent }: { roomId: string; mod: string; onSe
           onChange={(e) => {
             setEmail(e.target.value);
             setStatus('idle');
+            setError('');
           }}
         />
         <button type="submit" disabled={status === 'sending'}>
           {status === 'sending' ? t.share.emailSending : t.share.emailSend}
         </button>
       </div>
+      <EmailHistory
+        emails={history}
+        onPick={(picked) => {
+          setEmail(picked);
+          setStatus('idle');
+          setError('');
+        }}
+      />
       {status === 'sent' && (
         <p className="note" role="status">
           {t.share.emailSent}

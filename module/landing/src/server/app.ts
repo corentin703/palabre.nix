@@ -13,7 +13,7 @@ import type { LoadedFile } from './files.js';
 import { HttpError, getClientIp, readJson, sendError, sendJson, sendText } from './http.js';
 import { joinRoom } from './join.js';
 import { invitationMails } from './mail.js';
-import { sendMail } from './smtp.js';
+import { RecipientRejected, sendMail } from './smtp.js';
 import type { PnmApi } from './plugnmeet.js';
 import { createRoomKeys, roomLabel } from './rooms.js';
 import { RateLimiter } from './window-counter.js';
@@ -87,7 +87,8 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
     const room = typeof body?.room === 'string' ? slugifyRoomId(body.room) : '';
     const mod = typeof body?.mod === 'string' ? body.mod : '';
     const email = typeof body?.email === 'string' ? body.email.trim() : '';
-    if (!room || !/^[^\s@<>",;:]{1,64}@[^\s@<>",;:]{1,255}$/.test(email)) throw new HttpError(400, 'invalid_request');
+    if (!room || !mod) throw new HttpError(400, 'invalid_request');
+    if (!/^[^\s@<>",;:]{1,64}@[^\s@<>",;:]{1,255}$/.test(email)) throw new HttpError(400, 'invalid_email');
     // Only the holder of the moderator key may have the links sent (they contain it).
     if (!roomInfo(new URL(`http://x/?room=${encodeURIComponent(room)}&m=${encodeURIComponent(mod)}`))?.moderator) {
       throw new HttpError(400, 'invalid_request');
@@ -96,13 +97,18 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
       throw new HttpError(429, 'rate_limited');
     }
     const locale = isLocale(body?.locale) ? body.locale : config.defaultLocale;
+    let sent = 0;
     try {
       for (const mail of invitationMails(config, { roomId: room, label: roomLabel(room), mod, locale, to: email })) {
         await sendMail(config.mail, mail);
+        sent += 1;
       }
     } catch (err) {
       console.error('sending the links failed:', err instanceof Error ? err.message : err);
-      throw new HttpError(502, 'mail_failed');
+      // The relay refused the address (nothing sent), or it failed: after the first mail, the
+      // person has the invitation link but not the moderator link, and has to be told.
+      if (err instanceof RecipientRejected) throw new HttpError(422, 'mail_rejected');
+      throw new HttpError(502, sent > 0 ? 'mail_partial' : 'mail_failed');
     }
     sendJson(res, 200, { ok: true });
   }
