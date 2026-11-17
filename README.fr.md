@@ -130,6 +130,17 @@ déclarez-la dans `src/web/i18n/index.tsx`, ajoutez son message de bienvenue dan
 `src/server/messages.ts`, et autorisez-la dans l'option `landing.defaultLocale`. Tous les chemins
 sont sous `module/landing/`.
 
+## Plusieurs modérateurs
+
+Dans le client PlugNMeet, le bouton rouge d'un modérateur veut dire « terminer la réunion pour tout
+le monde », pas « quitter » : un modérateur qui part ainsi coupe les autres. `caddyHandles` envoie
+donc `POST /api/endRoom` à la page d'accueil, qui le refuse, avec un message, tant qu'un autre
+modérateur est dans la salle (le modérateur la quitte en fermant l'onglet), et le transmet tel quel à
+PlugNMeet quand l'appelant est le dernier. Si elle ne peut pas trancher, elle laisse la réunion se
+terminer. Si vous n'utilisez pas `caddyHandles`, routez vous-même ce chemin vers la page d'accueil.
+Seules comptent les personnes entrées dans la réunion : quelqu'un encore sur l'écran « prêt à
+rejoindre ? » ne compte pas.
+
 ## Réglages de LiveKit
 
 ```nix

@@ -6,6 +6,7 @@ import { isLocale } from '../shared/locales.js';
 import { ROOM_ID_RE, slugifyRoomId } from '../shared/slug.js';
 import { createAdminHandler } from './admin.js';
 import type { Config } from './config.js';
+import { createEndRoomHandler } from './end-room.js';
 import { sendFile, serveBuiltAsset } from './files.js';
 import { PWA_ICON_PREFIX, buildManifest } from './pwa.js';
 import type { PwaIcons } from './pwa.js';
@@ -43,6 +44,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
   // Mails: a few per IP, and a few per address, so the form is not a way to spam someone.
   const mailIpLimiter = new RateLimiter(60 * 60 * 1000, 6);
   const mailAddressLimiter = new RateLimiter(24 * 60 * 60 * 1000, 3);
+  const endRoom = createEndRoomHandler({ config, pnm });
   const admin = config.adminToken ? createAdminHandler({ pnm, config, adminToken: config.adminToken, keys }) : null;
   if (!admin) console.warn('ADMIN_TOKEN is not set: the /admin panel is disabled');
 
@@ -126,6 +128,9 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
     const { pathname } = url;
     const get = req.method === 'GET';
+
+    // The PlugNMeet client's "end meeting" button (sent here by the reverse proxy, see caddy.nix).
+    if (req.method === 'POST' && pathname === '/api/endRoom') return endRoom(req, res);
 
     // Administration panel: the API first, then the page (the web application).
     if (pathname === '/admin' || pathname.startsWith('/admin/')) {

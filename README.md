@@ -128,6 +128,16 @@ To add a language: add its code to `src/shared/locales.ts`, copy `src/web/i18n/e
 `src/web/i18n/index.tsx`, add its welcome message in `src/server/messages.ts`, and allow it in the
 `landing.defaultLocale` option. All paths are under `module/landing/`.
 
+## Several moderators
+
+In the PlugNMeet client, the red button of a moderator means "end the meeting for everyone", not
+"leave": one moderator leaving that way would cut the others off. `caddyHandles` therefore sends
+`POST /api/endRoom` to the landing page, which refuses it, with a message, while another moderator is
+in the room (the moderator leaves by closing the tab), and passes it on to PlugNMeet unchanged when
+the caller is the last one. If it cannot tell, it lets the meeting end. If you do not use
+`caddyHandles`, route that path to the landing page yourself. Only people who entered the meeting
+count: someone still on the "ready to join?" screen does not.
+
 ## Tuning LiveKit
 
 ```nix
