@@ -4,8 +4,8 @@
 #   http://localhost:3000/admin  admin panel, token: admin-token
 #   http://localhost:8025        mailbox: the mails the page sends
 #
-# PlugNMeet and the mail relay are faked (module/landing/dev/mock.mjs): "entering" a room just
-# comes back to the page. After a change the server restarts by itself; reload the browser.
+# PlugNMeet and the mail relay are faked (module/landing/dev/mock.mjs): "entering" a room leads
+# to a stand-in meeting page showing the room, the name and the role. After a change the server restarts by itself; reload the browser.
 { pkgs, ... }:
 let
   landing = "module/landing";

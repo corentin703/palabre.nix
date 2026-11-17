@@ -213,7 +213,7 @@ Après une modification de `package-lock.json`, mettez à jour `npmDepsHash` dan
 aucune infrastructure (reconstruction et redémarrage à chaque modification ; rechargez le
 navigateur) :
 
-- <http://localhost:3000> : la page d'accueil (« entrer » dans un salon y revient simplement) ;
+- <http://localhost:3000> : la page d'accueil (« entrer » dans un salon ouvre une fausse page de réunion indiquant le salon, le prénom et le rôle) ;
 - <http://localhost:3000/admin> : le panneau d'administration, jeton `admin-token` ;
 - <http://localhost:8025> : la boîte aux lettres, avec les courriels envoyés par la page.
 

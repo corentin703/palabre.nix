@@ -4,7 +4,8 @@
 //   landing + admin   http://localhost:3000        (/admin: token "admin-token")
 //   mailbox           http://localhost:8025        (what the "email me the links" form sends)
 //
-// "Entering" a room just comes back to the landing page with an access_token in the URL.
+// "Entering" a room leads to a fake meeting page (/?access_token=...) showing the room, the
+// name and whether you are a moderator.
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as net from 'node:net';
@@ -29,7 +30,11 @@ const pnm = {
     open.set(roomId, Math.floor(Date.now() / 1000));
     return { status: true };
   },
-  getJoinToken: async () => ({ status: true, token: 'fake-token' }),
+  // The token carries what the fake meeting page shows.
+  getJoinToken: async ({ roomId, userInfo }) => ({
+    status: true,
+    token: Buffer.from(JSON.stringify({ roomId, name: userInfo?.name, isAdmin: userInfo?.isAdmin })).toString('base64url'),
+  }),
   getActiveRoomsInfo: async () => ({
     status: true,
     rooms: [...open].map(([roomId, created]) => ({
@@ -125,10 +130,32 @@ const config = loadConfig({
   MAIL_FROM: 'visio@palabre.test',
   ...process.env,
 });
+const app = createApp({ config, pnm, indexHtml: fs.readFileSync(path.join(web, 'index.html')), webDir: web, logo: undefined, customCss: undefined });
+
+/** What PlugNMeet's client would show at the meeting address: here, a stand-in page. */
+function meetingPage(token, res) {
+  let who = {};
+  try {
+    who = JSON.parse(Buffer.from(token, 'base64url').toString());
+  } catch {
+    // Unreadable token: shown as unknown.
+  }
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end(`<!doctype html><meta charset="utf-8"><title>Fake meeting</title>
+<body style="font-family:system-ui;max-width:36rem;margin:4rem auto;text-align:center">
+<h1>🎥 Fake meeting</h1>
+<p>Room <b>${escape(String(who.roomId ?? '?'))}</b></p>
+<p>${escape(String(who.name ?? '?'))} — <b>${who.isAdmin ? 'moderator' : 'participant'}</b></p>
+<p><a href="/">Back to the landing page</a> · <a href="/admin">Admin</a></p>`);
+}
+
 http
-  .createServer(
-    createApp({ config, pnm, indexHtml: fs.readFileSync(path.join(web, 'index.html')), webDir: web, logo: undefined, customCss: undefined }),
-  )
+  .createServer((req, res) => {
+    const url = new URL(req.url ?? '/', 'http://localhost');
+    const token = url.searchParams.get('access_token');
+    if (url.pathname === '/' && token) return meetingPage(token, res);
+    return app(req, res);
+  })
   .listen(config.port, config.bindHost, () => {
     console.log(`landing   http://localhost:${config.port}\nadmin     http://localhost:${config.port}/admin  (token: admin-token)\nmailbox   http://localhost:${MAILBOX_PORT}`);
   });
