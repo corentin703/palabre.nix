@@ -122,6 +122,7 @@ export const fr = {
     noActiveRoom: 'Aucune salle ouverte.',
     noPastRoom: 'Aucune salle terminée.',
     joinAsModerator: 'Rejoindre en modérateur',
+    actions: 'Actions',
     observe: 'Observer en incognito',
     observeHelp:
       'Rejoint la réunion sans être vu de personne (modérateurs compris), en vue seule : l’écran de la réunion, sans caméra, micro, chat ni liste des participants. Un seul observateur à la fois par salon.',

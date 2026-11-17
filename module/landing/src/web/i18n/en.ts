@@ -120,6 +120,7 @@ export const en: Messages = {
     noActiveRoom: 'No open room.',
     noPastRoom: 'No past room.',
     joinAsModerator: 'Join as moderator',
+    actions: 'Actions',
     observe: 'Observe incognito',
     observeHelp:
       'Joins the meeting without being seen by anyone (moderators included), view only: the meeting screen, with no camera, microphone, chat or participants list. One observer at a time per room.',

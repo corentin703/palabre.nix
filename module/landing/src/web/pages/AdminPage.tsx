@@ -28,10 +28,10 @@ function RoomLinks({ roomId, mod }: { roomId: string; mod: string }) {
   const { t } = useI18n();
   const url = `${location.origin}/r/${roomId}`;
   return (
-    <>
+    <div className="btn-row">
       <CopyButton value={url} label={t.admin.copyInvitation} />
       {mod && <CopyButton value={`${url}?m=${mod}`} label={t.admin.copyModerator} />}
-    </>
+    </div>
   );
 }
 
@@ -229,7 +229,7 @@ export default function AdminPage({ brandName }: { brandName: string }) {
                 <th>{t.admin.room}</th>
                 <th>{t.admin.participants}</th>
                 <th>{t.admin.created}</th>
-                <th />
+                <th className="actions">{t.admin.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -245,14 +245,16 @@ export default function AdminPage({ brandName }: { brandName: string }) {
                   </td>
                   <td>{formatDate(room.created, locale)}</td>
                   <td className="actions">
-                    <RoomLinks roomId={room.roomId} mod={room.mod} />{' '}
-                    <button className="ghost" onClick={() => joinAsModerator(room)}>
-                      {t.admin.joinAsModerator}
-                    </button>{' '}
-                    <button className="ghost" onClick={() => joinAsModerator(room, true)} title={t.admin.observeHelp}>
-                      {t.admin.observe}
-                    </button>{' '}
-                    <button onClick={() => closeRoom(room)}>{t.admin.closeRoom}</button>
+                    <RoomLinks roomId={room.roomId} mod={room.mod} />
+                    <div className="btn-row">
+                      <button className="ghost" onClick={() => joinAsModerator(room)}>
+                        {t.admin.joinAsModerator}
+                      </button>
+                      <button className="ghost" onClick={() => joinAsModerator(room, true)} title={t.admin.observeHelp}>
+                        {t.admin.observe}
+                      </button>
+                      <button onClick={() => closeRoom(room)}>{t.admin.closeRoom}</button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -272,7 +274,7 @@ export default function AdminPage({ brandName }: { brandName: string }) {
                 <th>{t.admin.participants}</th>
                 <th>{t.admin.created}</th>
                 <th>{t.admin.ended}</th>
-                <th />
+                <th className="actions">{t.admin.actions}</th>
               </tr>
             </thead>
             <tbody>
