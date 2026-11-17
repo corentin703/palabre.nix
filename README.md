@@ -204,6 +204,15 @@ $ npm run dev         # Vite dev server for the web app; run `npm start` next to
 After changing `package-lock.json`, update `npmDepsHash` in `module/landing/package.nix` (put
 `lib.fakeHash`, build, copy the hash Nix prints).
 
+### Trying it quickly
+
+`devenv up` starts the landing page with a fake PlugNMeet and a fake mail relay, no
+infrastructure needed (rebuilds and restarts on change; reload the browser):
+
+- <http://localhost:3000>: the landing page ("entering" a room just comes back to it);
+- <http://localhost:3000/admin>: the admin panel, token `admin-token`;
+- <http://localhost:8025>: the mailbox, with the mails the page sends.
+
 ## Layout
 
 - `flake.nix`: exposes `nixosModules.palabre` and `packages.palabre-landing`;

@@ -207,6 +207,16 @@ $ npm run dev         # serveur de développement Vite ; lancez `npm start` à c
 Après une modification de `package-lock.json`, mettez à jour `npmDepsHash` dans
 `module/landing/package.nix` (mettez `lib.fakeHash`, construisez, copiez le hash affiché par Nix).
 
+### Essayer rapidement
+
+`devenv up` lance la page d'accueil avec un faux PlugNMeet et un faux relais de courriels, sans
+aucune infrastructure (reconstruction et redémarrage à chaque modification ; rechargez le
+navigateur) :
+
+- <http://localhost:3000> : la page d'accueil (« entrer » dans un salon y revient simplement) ;
+- <http://localhost:3000/admin> : le panneau d'administration, jeton `admin-token` ;
+- <http://localhost:8025> : la boîte aux lettres, avec les courriels envoyés par la page.
+
 ## Structure
 
 - `flake.nix` : expose `nixosModules.palabre` et `packages.palabre-landing` ;
