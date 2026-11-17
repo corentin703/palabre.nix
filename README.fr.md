@@ -236,13 +236,21 @@ Après une modification de `package-lock.json`, mettez à jour `npmDepsHash` dan
 
 ### Essayer rapidement
 
-`devenv up` lance la page d'accueil avec un faux PlugNMeet et un faux relais de courriels, sans
-aucune infrastructure (reconstruction et redémarrage à chaque modification ; rechargez le
-navigateur) :
+`devenv up` lance toute la pile sur votre machine, sans infrastructure à installer (Docker est
+nécessaire pour PlugNMeet ; le premier démarrage télécharge son image et son client web) :
 
-- <http://localhost:3000> : la page d'accueil (« entrer » dans un salon ouvre une fausse page de réunion indiquant le salon, le prénom et le rôle) ;
-- <http://localhost:3000/admin> : le panneau d'administration, jeton `admin-token` ;
-- <http://localhost:8025> : la boîte aux lettres, avec les courriels envoyés par la page.
+- <http://localhost:8080> : l'adresse publique, comme le vhost d'un vrai déploiement : la page
+  d'accueil, les réunions, et <http://localhost:8080/admin> (jeton `admin-token`) ;
+- <http://localhost:8025> : la boîte aux lettres, avec les courriels envoyés par la page d'accueil.
+
+Redis, MariaDB, NATS et LiveKit tournent nativement ; PlugNMeet tourne dans Docker, avec l'image
+épinglée dans `pin-oci.lock` ; Caddy route par chemin comme `caddyHandles`, sans TLS (`localhost`
+est un contexte sécurisé : caméra et micro fonctionnent). La page d'accueil est la vraie, reconstruite
+à chaque modification (rechargez le navigateur). La configuration de la pile est écrite par
+`dev/setup.sh`.
+
+`landing-mock` (dans `devenv shell`) lance la page d'accueil seule avec un faux PlugNMeet, si vous
+n'avez pas Docker.
 
 ## Structure
 

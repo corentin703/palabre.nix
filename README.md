@@ -232,12 +232,20 @@ After changing `package-lock.json`, update `npmDepsHash` in `module/landing/pack
 
 ### Trying it quickly
 
-`devenv up` starts the landing page with a fake PlugNMeet and a fake mail relay, no
-infrastructure needed (rebuilds and restarts on change; reload the browser):
+`devenv up` runs the whole stack on your machine, with no infrastructure to set up (Docker is
+needed for PlugNMeet; the first start downloads its image and its web client):
 
-- <http://localhost:3000>: the landing page ("entering" a room opens a stand-in meeting page showing the room, the name and the role);
-- <http://localhost:3000/admin>: the admin panel, token `admin-token`;
-- <http://localhost:8025>: the mailbox, with the mails the page sends.
+- <http://localhost:8080>: the public address, as a real deployment's vhost: the landing page, the
+  meetings, and <http://localhost:8080/admin> (token `admin-token`);
+- <http://localhost:8025>: the mailbox, with the mails the landing page sends.
+
+Redis, MariaDB, NATS and LiveKit run natively; PlugNMeet runs in Docker, from the image pinned in
+`pin-oci.lock`; Caddy routes by path like `caddyHandles`, without TLS (`localhost` is a secure
+context: camera and microphone work). The landing page is the real one, rebuilt on change (reload the
+browser). The configuration of the stack is written by `dev/setup.sh`.
+
+`landing-mock` (in `devenv shell`) runs the landing page alone with a fake PlugNMeet, if you do not
+have Docker.
 
 ## Layout
 
