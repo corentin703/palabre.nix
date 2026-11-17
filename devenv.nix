@@ -39,12 +39,16 @@ let
   livekitKey = "devlivekitkey";
   livekitSecret = "devlivekitsecretdevlivekitsecret0";
 
-  # Waits for the ports given (bash).
+  # Waits for the ports given (bash), and fails with a message rather than waiting for ever.
   waitFor =
     ps:
-    lib.concatMapStringsSep "\n" (
-      p: "until (echo > /dev/tcp/127.0.0.1/${toString p}) 2>/dev/null; do sleep 1; done"
-    ) ps;
+    lib.concatMapStringsSep "\n" (p: ''
+      for i in $(seq 1 180); do
+        (echo > /dev/tcp/127.0.0.1/${toString p}) 2>/dev/null && break
+        [ "$i" = 180 ] && { echo "nothing listens on port ${toString p} after 3 minutes" >&2; exit 1; }
+        sleep 1
+      done
+    '') ps;
 in
 {
   packages = [

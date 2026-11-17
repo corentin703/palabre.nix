@@ -1,3 +1,7 @@
 inputs:
   nixpkgs:
     url: github:nixos/nixpkgs/nixos-26.05
+
+# A port already in use is an error, not a silent shift to the next one: the stack's configuration
+# (dev/setup.sh) hardcodes the ports.
+strict_ports: true
