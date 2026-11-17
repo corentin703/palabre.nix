@@ -6,9 +6,21 @@ let
   rtcPortRangeStart = cfg.rtc.portRangeStart;
   rtcPortRangeEnd = cfg.rtc.portRangeEnd;
   rtcTcpPort = cfg.rtc.tcpPort;
+  rtcUdpPort = cfg.rtc.udpPort;
+
+  lk = cfg.livekit;
+  turn = lk.turn;
+  turnTls = turn.enable && turn.certFile != null && turn.keyFile != null;
 in
 {
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = (turn.certFile == null) == (turn.keyFile == null);
+        message = "services.palabre.livekit.turn.certFile and keyFile go together.";
+      }
+    ];
+
     services.palabre.rendered.livekit = {
       unit = "podman-palabre-livekit-server";
       secrets = {
@@ -21,16 +33,34 @@ in
           @LIVEKIT_API_KEY@: @LIVEKIT_API_SECRET@
         redis:
           address: 127.0.0.1:${toString cfg.ports.redis}
+        logging:
+          level: ${lk.logLevel}
         rtc:
-          port_range_start: ${toString rtcPortRangeStart}
-          port_range_end: ${toString rtcPortRangeEnd}
+      ''
+      + (
+        if rtcUdpPort != null then
+          "  udp_port: ${toString rtcUdpPort}\n"
+        else
+          "  port_range_start: ${toString rtcPortRangeStart}\n  port_range_end: ${toString rtcPortRangeEnd}\n"
+      )
+      + ''
           tcp_port: ${toString rtcTcpPort}
           use_external_ip: true
         webhook:
           api_key: @LIVEKIT_API_KEY@
           urls:
             - https://${cfg.host}/webhook
-      '';
+      ''
+      + lib.optionalString turn.enable (
+        "turn:\n  enabled: true\n"
+        + "  domain: ${if turn.domain != null then turn.domain else cfg.host}\n"
+        + "  udp_port: ${toString turn.udpPort}\n"
+        + lib.optionalString turnTls (
+          "  tls_port: ${toString turn.tlsPort}\n"
+          + "  cert_file: /etc/livekit-turn/cert.pem\n"
+          + "  key_file: /etc/livekit-turn/key.pem\n"
+        )
+      );
     };
 
     # Project "palabre" (livekit + plugnmeet): target podman-palabre.target.
@@ -41,6 +71,10 @@ in
       podman.user = ociUser;
       volumes = [
         "${cfg.rendered.livekit.path}:/etc/livekit.yaml:ro"
+      ]
+      ++ lib.optionals turnTls [
+        "${toString turn.certFile}:/etc/livekit-turn/cert.pem:ro"
+        "${toString turn.keyFile}:/etc/livekit-turn/key.pem:ro"
       ];
       cmd = [
         "--config"
@@ -59,18 +93,16 @@ in
     systemd.services.podman-palabre-livekit-server = {
       after = [ "redis-palabre.service" ];
       requires = [ "redis-palabre.service" ];
+      serviceConfig = lib.mkIf (lk.cpuWeight != null) { CPUWeight = lk.cpuWeight; };
     };
 
     networking.firewall = {
-      allowedUDPPortRanges = [
-        {
-          from = rtcPortRangeStart;
-          to = rtcPortRangeEnd;
-        }
-      ];
-      allowedTCPPorts = [
-        rtcTcpPort
-      ];
+      allowedUDPPortRanges = lib.optional (rtcUdpPort == null) {
+        from = rtcPortRangeStart;
+        to = rtcPortRangeEnd;
+      };
+      allowedUDPPorts = lib.optional (rtcUdpPort != null) rtcUdpPort ++ lib.optional turn.enable turn.udpPort;
+      allowedTCPPorts = [ rtcTcpPort ] ++ lib.optional turnTls turn.tlsPort;
       # The main HTTP/WS port (cfg.port) is deliberately NOT opened here:
       # with `--network=host` it is bound directly on the host, but must only
       # be reachable locally (127.0.0.1) from Caddy, never directly from the

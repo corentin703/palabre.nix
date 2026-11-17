@@ -128,6 +128,28 @@ To add a language: add its code to `src/shared/locales.ts`, copy `src/web/i18n/e
 `src/web/i18n/index.tsx`, add its welcome message in `src/server/messages.ts`, and allow it in the
 `landing.defaultLocale` option. All paths are under `module/landing/`.
 
+## Tuning LiveKit
+
+```nix
+services.palabre = {
+  livekit.logLevel = "warn";   # default; "info" writes a line every few seconds per meeting
+  livekit.cpuWeight = 200;     # default; systemd CPUWeight (100 = normal): the media server wins a CPU contention
+  rtc.udpPort = 7882;          # all the media on one UDP port, instead of portRangeStart-portRangeEnd
+
+  # Relay for participants whose network blocks the media. Off by default.
+  livekit.turn = {
+    enable = true;
+    tlsPort = 443;             # the one that gets through the most networks, if nothing else listens on it
+    certFile = "/var/lib/acme/visio.example.org/fullchain.pem";   # readable by `user`
+    keyFile = "/var/lib/acme/visio.example.org/key.pem";
+  };
+};
+```
+
+The firewall follows (`udpPort`, the TURN ports). TURN needs `turn.udpPort` (3478) and, with a
+certificate, `turn.tlsPort` reachable from the Internet; without `certFile`/`keyFile` only TURN over
+UDP is enabled, which helps little against networks that filter UDP.
+
 ## Sending the links by email
 
 With `landing.mail` set, the page offers to email the room's links to whoever created it: two

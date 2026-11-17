@@ -122,17 +122,85 @@ in
       portRangeStart = mkOption {
         type = types.port;
         default = 50000;
-        description = "First port of the UDP range LiveKit uses for media (opened in the firewall).";
+        description = "First port of the UDP range LiveKit uses for media (opened in the firewall). Ignored with `udpPort`.";
       };
       portRangeEnd = mkOption {
         type = types.port;
         default = 60000;
-        description = "Last port of the UDP range LiveKit uses for media (opened in the firewall).";
+        description = "Last port of the UDP range LiveKit uses for media (opened in the firewall). Ignored with `udpPort`.";
+      };
+      udpPort = mkOption {
+        type = types.nullOr types.port;
+        default = null;
+        example = 7882;
+        description = ''
+          Carry all the media over this single UDP port instead of the `portRangeStart`-`portRangeEnd`
+          range: only one port to open in the firewall. LiveKit multiplexes the connections on it.
+        '';
       };
       tcpPort = mkOption {
         type = types.port;
         default = 7881;
         description = "TCP port LiveKit uses for media when UDP is not available (opened in the firewall).";
+      };
+    };
+
+    livekit = {
+      logLevel = mkOption {
+        type = types.enum [
+          "debug"
+          "info"
+          "warn"
+          "error"
+        ];
+        default = "warn";
+        description = ''
+          LiveKit's log level. At `info` it writes a line every few seconds per meeting (bandwidth
+          probes), which fills the journal for nothing.
+        '';
+      };
+      cpuWeight = mkOption {
+        type = types.nullOr (types.ints.between 1 10000);
+        default = 200;
+        description = ''
+          systemd `CPUWeight` of the LiveKit unit (the default weight is 100): when the machine's
+          CPU is contended (a busy blog on the same host, for instance), the media server is served
+          first, so a meeting does not stutter. `null` leaves systemd's default.
+        '';
+      };
+      turn = {
+        enable = mkEnableOption ''
+          LiveKit's built-in TURN server, for participants whose network blocks the media (UDP
+          filtered, strict corporate firewalls): their traffic is relayed instead of falling back on
+          TCP, which degrades the quality. Only worth it with `certFile` and `keyFile`: TURN over
+          TLS is what gets through the strictest networks'';
+        udpPort = mkOption {
+          type = types.port;
+          default = 3478;
+          description = "TURN/UDP port (opened in the firewall).";
+        };
+        tlsPort = mkOption {
+          type = types.port;
+          default = 5349;
+          description = "TURN/TLS port, used when `certFile` and `keyFile` are set (opened in the firewall). 443 is the one that gets through the most networks, if nothing else listens on it.";
+        };
+        domain = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "Domain name of the TURN server (it must resolve to this machine, and match the certificate). Default: `host`.";
+        };
+        certFile = mkOption {
+          type = types.nullOr types.path;
+          default = null;
+          example = "/var/lib/acme/visio.example.org/fullchain.pem";
+          description = "Certificate for TURN/TLS, mounted read-only in the LiveKit container: it must be readable by `user`.";
+        };
+        keyFile = mkOption {
+          type = types.nullOr types.path;
+          default = null;
+          example = "/var/lib/acme/visio.example.org/key.pem";
+          description = "Private key matching `certFile`, readable by `user`.";
+        };
       };
     };
 

@@ -130,6 +130,28 @@ déclarez-la dans `src/web/i18n/index.tsx`, ajoutez son message de bienvenue dan
 `src/server/messages.ts`, et autorisez-la dans l'option `landing.defaultLocale`. Tous les chemins
 sont sous `module/landing/`.
 
+## Réglages de LiveKit
+
+```nix
+services.palabre = {
+  livekit.logLevel = "warn";   # défaut ; "info" écrit une ligne toutes les quelques secondes par réunion
+  livekit.cpuWeight = 200;     # défaut ; CPUWeight systemd (100 = normal) : le serveur média passe en premier
+  rtc.udpPort = 7882;          # tout le média sur un seul port UDP, au lieu de portRangeStart-portRangeEnd
+
+  # Relais pour les participants dont le réseau bloque le média. Désactivé par défaut.
+  livekit.turn = {
+    enable = true;
+    tlsPort = 443;             # celui qui passe le plus de réseaux, si rien d'autre n'écoute dessus
+    certFile = "/var/lib/acme/visio.example.org/fullchain.pem";   # lisible par `user`
+    keyFile = "/var/lib/acme/visio.example.org/key.pem";
+  };
+};
+```
+
+Le pare-feu suit (`udpPort`, les ports TURN). TURN demande `turn.udpPort` (3478) et, avec un
+certificat, `turn.tlsPort` joignables depuis Internet ; sans `certFile`/`keyFile`, seul TURN sur UDP
+est activé, ce qui aide peu contre les réseaux qui filtrent l'UDP.
+
 ## Envoi des liens par courriel
 
 Avec `landing.mail` renseigné, la page propose d'envoyer par courriel les liens du salon à la
