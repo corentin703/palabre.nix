@@ -343,11 +343,13 @@ in
         let
           # Each setting is given either as a value, or as the path of a file holding it (sops...):
           # the module itself never sees a file's content.
-          file = what: mkOption {
-            type = types.nullOr secretFile;
-            default = null;
-            description = "File containing ${what}; alternative to the plain option of the same name.";
-          };
+          file =
+            what:
+            mkOption {
+              type = types.nullOr secretFile;
+              default = null;
+              description = "File containing ${what}; alternative to the plain option of the same name.";
+            };
         in
         {
           host = mkOption {

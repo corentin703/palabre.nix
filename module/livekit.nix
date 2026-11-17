@@ -101,7 +101,8 @@ in
         from = rtcPortRangeStart;
         to = rtcPortRangeEnd;
       };
-      allowedUDPPorts = lib.optional (rtcUdpPort != null) rtcUdpPort ++ lib.optional turn.enable turn.udpPort;
+      allowedUDPPorts =
+        lib.optional (rtcUdpPort != null) rtcUdpPort ++ lib.optional turn.enable turn.udpPort;
       allowedTCPPorts = [ rtcTcpPort ] ++ lib.optional turnTls turn.tlsPort;
       # The main HTTP/WS port (cfg.port) is deliberately NOT opened here:
       # with `--network=host` it is bound directly on the host, but must only

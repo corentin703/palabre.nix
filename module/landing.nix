@@ -119,7 +119,9 @@ in
         }
         // lib.optionalAttrs (lcfg.pwa.shortName != null) { LANDING_SHORT_NAME = lcfg.pwa.shortName; }
       )
-      // lib.listToAttrs (map (name: lib.nameValuePair mailEnv.${name} (toString (mailValue name))) mailValues)
+      // lib.listToAttrs (
+        map (name: lib.nameValuePair mailEnv.${name} (toString (mailValue name))) mailValues
+      )
       // lib.optionalAttrs hasCss { LANDING_CSS_FILE = "/etc/palabre/custom.css"; }
       // lib.optionalAttrs (lcfg.logo != null) { LANDING_LOGO_FILE = logoTarget; };
       environmentFiles = [
