@@ -16,7 +16,7 @@ import type { PnmApi } from './plugnmeet';
 const calls: {
   tokens: { roomId: string; isAdmin: boolean }[];
   created: string[];
-  userInfos: { isAdmin?: boolean; isHidden?: boolean; userMetadata?: { lockSettings?: Record<string, boolean> } }[];
+  userInfos: { userId?: string; isAdmin?: boolean; isHidden?: boolean; userMetadata?: { lockSettings?: Record<string, boolean> } }[];
 } = { tokens: [], created: [], userInfos: [] };
 
 const pnm = {
@@ -306,12 +306,13 @@ describe('administration panel', () => {
     expect(rooms.active).toMatchObject([{ roomId: `salon-${tag}`, mod }]);
   });
 
-  it('joins a room as an invisible observer: hidden, not a moderator, with everything locked', async () => {
+  it('joins a room as an invisible observer: PlugNMeet’s hidden identity, not a moderator, everything locked', async () => {
     const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
     const response = await postJson('/admin/api/rooms/observe', { roomId: 'salon-0123456789ab', locale: 'fr' }, { cookie });
     expect([response.status, await response.json()]).toEqual([200, { url: 'https://visio.example/?access_token=jeton&lng=fr-FR' }]);
     const observer = calls.userInfos[0];
-    expect(observer).toMatchObject({ isAdmin: false, isHidden: true });
+    // The identifier PlugNMeet leaves out of its participants' lists; everyone else gets a random one.
+    expect(observer).toMatchObject({ userId: 'RECORDER_BOT', isAdmin: false, isHidden: true });
     expect(observer?.userMetadata?.lockSettings).toMatchObject({ lockMicrophone: true, lockWebcam: true, lockScreenSharing: true });
     expect((await postJson('/admin/api/rooms/observe', { roomId: 'salon-0123456789ab' })).status).toBe(401);
   });

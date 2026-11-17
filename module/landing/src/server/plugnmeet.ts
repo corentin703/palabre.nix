@@ -42,6 +42,9 @@ export function joinUrl(config: Config, token: string, locale: Locale): string {
   return `${config.plugnmeetHost}/?access_token=${encodeURIComponent(token)}&lng=${lng}`;
 }
 
+/** The identifier PlugNMeet hides everywhere (see its `config.RecorderBot`). */
+export const OBSERVER_USER_ID = 'RECORDER_BOT';
+
 /**
  * One identity per connection: several people can share a moderator link without
  * disconnecting each other (PlugNMeet replaces any session with the same identity).
@@ -57,7 +60,9 @@ export async function createJoinUrl(
     roomId,
     userInfo: {
       name: user.name,
-      userId: crypto.randomUUID(),
+      // PlugNMeet leaves its internal users (recorder bot) out of the participants' lists, by their
+      // identifier: that is what makes an observer invisible (the `isHidden` flag alone does not).
+      userId: user.observer ? OBSERVER_USER_ID : crypto.randomUUID(),
       isAdmin: user.isAdmin,
       isHidden: user.observer === true,
       // An observer is invisible to the others (isHidden) and, as a precaution, cannot do

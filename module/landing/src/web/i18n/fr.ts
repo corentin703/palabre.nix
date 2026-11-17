@@ -124,7 +124,7 @@ export const fr = {
     joinAsModerator: 'Rejoindre en modérateur',
     observe: 'Observer en incognito',
     observeHelp:
-      'Rejoint la réunion sans être vu des participants (absent de la liste), sans caméra, micro, partage d’écran ni chat.',
+      'Rejoint la réunion sans être vu de personne (modérateurs compris), en vue seule : l’écran de la réunion, sans caméra, micro, chat ni liste des participants. Un seul observateur à la fois par salon.',
     copyInvitation: 'Copier le lien d’invitation',
     copyModerator: 'Copier le lien modérateur',
     copied: 'Copié',

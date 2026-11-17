@@ -122,7 +122,7 @@ export const en: Messages = {
     joinAsModerator: 'Join as moderator',
     observe: 'Observe incognito',
     observeHelp:
-      'Joins the meeting without being seen by the participants (absent from the list), with no camera, microphone, screen sharing or chat.',
+      'Joins the meeting without being seen by anyone (moderators included), view only: the meeting screen, with no camera, microphone, chat or participants list. One observer at a time per room.',
     copyInvitation: 'Copy invitation link',
     copyModerator: 'Copy moderator link',
     copied: 'Copied',
