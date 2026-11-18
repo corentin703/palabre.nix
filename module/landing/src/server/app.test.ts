@@ -143,6 +143,14 @@ describe('POST /visio-api/join', () => {
     expect(calls.tokens).toEqual([{ roomId: `reunion-bureau-${tag}`, isAdmin: true }]);
   });
 
+  it('sends whoever leaves the meeting back to the room’s page, without the moderator key', async () => {
+    const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
+    await postJson('/visio-api/join', { room: `salon-${tag}`, name: 'Camille', mod, locale: 'fr' });
+    const created = vi.mocked(pnm.createRoom).mock.calls.at(-1)?.[0] as unknown as { metadata?: { logoutUrl?: string } };
+    expect(created.metadata?.logoutUrl).toBe(`https://visio.example/r/salon-${tag}`);
+    expect(created.metadata?.logoutUrl).not.toContain(mod);
+  });
+
   it('only makes a moderator of whoever presents the room’s key', async () => {
     const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
     const room = `salon-${tag}`;

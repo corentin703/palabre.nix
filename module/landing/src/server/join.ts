@@ -80,8 +80,9 @@ export async function joinRoom(request: JoinRequest, { pnm, config, keys, closed
           metadata: {
             roomTitle: title.slice(0, 128),
             // Where the PlugNMeet client sends the person when they leave the meeting: back to
-            // this home page.
-            logoutUrl: `${config.plugnmeetHost}/`,
+            // this room's page, to join again after a mistake (or a dropped connection). Never
+            // with the moderator key: everyone ends up there, whatever their role.
+            logoutUrl: `${config.plugnmeetHost}/r/${roomId}`,
             welcomeMessage: welcomeMessage(request.locale, escapeHtml(title)),
             roomFeatures: {
               allowWebcams: true,
