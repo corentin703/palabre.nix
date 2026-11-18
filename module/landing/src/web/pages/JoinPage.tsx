@@ -45,22 +45,36 @@ function readPreset(): Preset | null {
 /**
  * Moderator key of the room whose name is being typed: requested from the server (which
  * guarantees its tag), once per name, after a short typing pause.
+ *
+ * A key kept on this device from an earlier visit is asked about first: the server may no
+ * longer recognise it (its secret changed), and a key it does not recognise would make a
+ * moderator link that does not work, and a creator who is not a moderator of their own room.
+ * Only a key the server has just confirmed is shown or used.
  */
 function useRoomKey(roomInput: string, enabled: boolean) {
   const name = enabled ? slugifyRoomId(roomInput, ROOM_NAME_MAX) : '';
   const [, refresh] = useState(0);
   const pending = useRef(new Map<string, Promise<RoomKey | null>>());
+  const confirmed = useRef(new Set<string>());
 
   const obtain = useCallback((forName: string): Promise<RoomKey | null> => {
-    const known = findRoomKey(forName);
-    if (known) return Promise.resolve(known);
+    if (confirmed.current.has(forName)) return Promise.resolve(findRoomKey(forName));
     let request = pending.current.get(forName);
     if (!request) {
-      request = getRoomKey()
-        .then((key) => {
-          saveRoomKey(forName, findRoomKey(forName) ?? key);
-          return findRoomKey(forName);
-        })
+      request = (async () => {
+        const known = findRoomKey(forName);
+        // The server may be unable to answer: then the key is kept as it is.
+        const recognised = known
+          ? await getRoomInfo(`${forName}-${known.tag}`, known.mod).then(
+              (info) => info.moderator,
+              () => true,
+            )
+          : false;
+        const key = known && recognised ? known : await getRoomKey();
+        if (key !== known) saveRoomKey(forName, key);
+        confirmed.current.add(forName);
+        return key;
+      })()
         .catch(() => null)
         .finally(() => {
           pending.current.delete(forName);
@@ -72,12 +86,12 @@ function useRoomKey(roomInput: string, enabled: boolean) {
   }, []);
 
   useEffect(() => {
-    if (!name || findRoomKey(name)) return;
+    if (!name || confirmed.current.has(name)) return;
     const timer = setTimeout(() => void obtain(name), 450);
     return () => clearTimeout(timer);
   }, [name, obtain]);
 
-  return { name, key: name ? findRoomKey(name) : null, obtain };
+  return { name, key: name && confirmed.current.has(name) ? findRoomKey(name) : null, obtain };
 }
 
 export default function JoinPage({ config }: { config: RuntimeConfig }) {
