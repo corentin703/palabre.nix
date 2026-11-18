@@ -317,6 +317,52 @@ describe('administration panel', () => {
     expect((await postJson('/admin/api/rooms/observe', { roomId: 'salon-0123456789ab' })).status).toBe(401);
   });
 
+  it('closes a room to new guests, but not to its moderators nor to the administrator', async () => {
+    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
+    const room = `salon-${tag}`;
+    const join = (body: Record<string, string>) => postJson('/visio-api/join', { room, name: 'x', locale: 'fr', ...body });
+
+    expect((await join({ mod: '' })).status).toBe(200);
+    expect((await postJson('/admin/api/rooms/close', { roomId: room })).status).toBe(401);
+    expect((await postJson('/admin/api/rooms/close', { roomId: room }, { cookie })).status).toBe(200);
+
+    calls.tokens.length = 0;
+    const guest = await join({ mod: '' });
+    expect([guest.status, await guest.json()]).toEqual([403, { code: 'room_closed' }]);
+    expect(calls.tokens).toEqual([]);
+    expect((await join({ mod })).status).toBe(200);
+    expect((await postJson('/admin/api/rooms/join', { roomId: room }, { cookie })).status).toBe(200);
+    expect((await postJson('/admin/api/rooms/observe', { roomId: room }, { cookie })).status).toBe(200);
+
+    vi.mocked(pnm.getActiveRoomsInfo).mockResolvedValueOnce({
+      status: true,
+      rooms: [{ roomInfo: { roomId: room, roomTitle: 'salon', sid: 's', creationTime: '1' }, participantsInfo: [] }],
+    } as never);
+    const listing = (await (await fetch(`${base}/admin/api/rooms`, { headers: { cookie } })).json()) as {
+      active: { closed: boolean }[];
+    };
+    expect(listing.active).toMatchObject([{ closed: true }]);
+
+    expect((await postJson('/admin/api/rooms/reopen', { roomId: room }, { cookie })).status).toBe(200);
+    expect((await join({ mod: '' })).status).toBe(200);
+  });
+
+  it('keeps the closed rooms across a restart when given a file', async () => {
+    const file = path.join(dir, 'closed.json');
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await start({ CLOSED_ROOMS_FILE: file });
+    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    await postJson('/admin/api/rooms/close', { roomId: 'salon-0123456789ab' }, { cookie });
+    expect(JSON.parse(fs.readFileSync(file, 'utf8'))).toEqual(['salon-0123456789ab']);
+
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await start({ CLOSED_ROOMS_FILE: file });
+    const guest = await postJson('/visio-api/join', { room: 'salon-0123456789ab', name: 'x', locale: 'fr' });
+    expect(guest.status).toBe(403);
+    fs.rmSync(file);
+  });
+
   it('derives the moderator keys from ROOM_KEY_SECRET when given, not from the PlugNMeet secret', async () => {
     const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
     await new Promise<void>((resolve) => server.close(() => resolve()));

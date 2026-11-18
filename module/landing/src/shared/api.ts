@@ -11,6 +11,7 @@ export type ErrorCode =
   | 'rate_limited'
   | 'invalid_room'
   | 'join_failed'
+  | 'room_closed'
   | 'bad_token'
   | 'too_many_attempts'
   | 'unauthorized'
@@ -81,6 +82,8 @@ export interface ActiveRoom {
   title: string;
   participants: string[];
   created: string;
+  /** Closed to new guests (moderators can still join). */
+  closed: boolean;
 }
 
 export interface PastRoom {
@@ -90,6 +93,7 @@ export interface PastRoom {
   participants: number;
   created: string;
   ended: string;
+  closed: boolean;
 }
 
 export interface RoomsListing {

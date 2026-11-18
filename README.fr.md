@@ -121,6 +121,14 @@ ou ajoutez `https://palabre.cachix.org` et la clé publique `palabre.cachix.org-
 déjà pour ses propres commandes). Mainteneurs : créez le cache sur cachix.org et ajoutez son
 jeton d'authentification aux secrets du dépôt sous le nom `CACHIX_AUTH_TOKEN`.
 
+## Verrouiller une salle
+
+Dans `/admin`, **Verrouiller** ferme une salle aux nouveaux invités : le lien d'invitation répond
+alors que la réunion est fermée, même si la salle est terminée et serait sinon recréée. Les
+modérateurs (lien modérateur, ou l'administrateur qui rejoint ou observe depuis `/admin`) entrent
+toujours, et les personnes déjà présentes restent ; **Déverrouiller** annule. La liste des salles
+verrouillées est conservée dans `services.palabre.landing.stateDir` (par défaut `<stateDir>-landing`).
+
 ## Langues
 
 La page d'accueil et le panneau `/admin` existent en français et en anglais. Chaque personne a la

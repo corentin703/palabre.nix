@@ -127,6 +127,11 @@ export const en: Messages = {
     copyInvitation: 'Copy invitation link',
     copyModerator: 'Copy moderator link',
     copied: 'Copied',
+    lockRoom: 'Lock',
+    unlockRoom: 'Unlock',
+    lockHelp:
+      'Locked: no new guest can join the room. Moderators (moderator link or administration) can still get in, and the people already there stay.',
+    locked: 'Locked',
     closeRoom: 'Close / delete',
     confirmClose: (title: string) =>
       `Close and delete the room “${title}”?\n\nParticipants are disconnected. The whiteboard, the chat and the uploaded files are erased permanently.`,
@@ -142,6 +147,7 @@ export const en: Messages = {
     invalid_request: 'Invalid request.',
     rate_limited: 'Too many attempts; please wait a few minutes.',
     invalid_room: 'Invalid room name (letters, digits and hyphens only).',
+    room_closed: 'This meeting is closed to new participants; please contact its organizer.',
     join_failed: 'The room cannot be joined right now; please try again later.',
     bad_token: 'Wrong token.',
     too_many_attempts: 'Too many attempts, try again in a few minutes.',

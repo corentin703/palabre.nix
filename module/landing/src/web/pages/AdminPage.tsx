@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { ActiveRoom, GeneratedLinks, RoomsListing } from '../../shared/api';
+import type { ActiveRoom, GeneratedLinks, PastRoom, RoomsListing } from '../../shared/api';
 import { CopyField } from '../components/CopyField';
 import { ApiFailure, request } from '../api';
 import { CopyButton } from '../components/CopyButton';
@@ -129,6 +129,14 @@ export default function AdminPage({ brandName }: { brandName: string }) {
     });
   }
 
+  /** Closes a room to new guests, or opens it again. */
+  function toggleLock(room: ActiveRoom | PastRoom) {
+    void act(async () => {
+      await request(room.closed ? '/admin/api/rooms/reopen' : '/admin/api/rooms/close', { roomId: room.roomId });
+      await load();
+    });
+  }
+
   function closeRoom(room: ActiveRoom) {
     if (!confirm(t.admin.confirmClose(room.title || room.roomId))) return;
     void act(async () => {
@@ -237,6 +245,7 @@ export default function AdminPage({ brandName }: { brandName: string }) {
                 <tr key={room.roomId}>
                   <td>
                     <strong>{room.title || room.roomId}</strong>
+                    {room.closed && <span className="badge">{t.admin.locked}</span>}
                     <div className="names">{room.roomId}</div>
                   </td>
                   <td>
@@ -252,6 +261,9 @@ export default function AdminPage({ brandName }: { brandName: string }) {
                       </button>
                       <button className="ghost" onClick={() => joinAsModerator(room, true)} title={t.admin.observeHelp}>
                         {t.admin.observe}
+                      </button>
+                      <button className="ghost" onClick={() => toggleLock(room)} title={t.admin.lockHelp}>
+                        {room.closed ? t.admin.unlockRoom : t.admin.lockRoom}
                       </button>
                       <button onClick={() => closeRoom(room)}>{t.admin.closeRoom}</button>
                     </div>
@@ -280,12 +292,20 @@ export default function AdminPage({ brandName }: { brandName: string }) {
             <tbody>
               {rooms.past.map((room) => (
                 <tr key={`${room.roomId}-${room.created}`}>
-                  <td>{room.title || room.roomId}</td>
+                  <td>
+                    {room.title || room.roomId}
+                    {room.closed && <span className="badge">{t.admin.locked}</span>}
+                  </td>
                   <td>{room.participants}</td>
                   <td className="muted">{formatDate(room.created, locale)}</td>
                   <td className="muted">{formatDate(room.ended, locale)}</td>
                   <td className="actions">
                     <RoomLinks roomId={room.roomId} mod={room.mod} />
+                    <div className="btn-row">
+                      <button className="ghost" onClick={() => toggleLock(room)} title={t.admin.lockHelp}>
+                        {room.closed ? t.admin.unlockRoom : t.admin.lockRoom}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

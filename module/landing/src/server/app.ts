@@ -15,6 +15,7 @@ import { joinRoom } from './join.js';
 import { invitationMails } from './mail.js';
 import { RecipientRejected, sendMail } from './smtp.js';
 import type { PnmApi } from './plugnmeet.js';
+import { createClosedRooms } from './closed-rooms.js';
 import { createRoomKeys, roomLabel } from './rooms.js';
 import { RateLimiter } from './window-counter.js';
 
@@ -37,6 +38,7 @@ const RATE_WINDOW_MS = 5 * 60 * 1000;
 /** The server's routes: the JSON API, the files, and the web application for the pages. */
 export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwaIcons }: AppDeps): RequestListener {
   const keys = createRoomKeys(config.roomKeySecret);
+  const closed = createClosedRooms(config.closedRoomsFile);
   const joinLimiter = new RateLimiter(RATE_WINDOW_MS, 10);
   // Separate limiter for key creation (one per new room name typed).
   const keyLimiter = new RateLimiter(RATE_WINDOW_MS, 60);
@@ -45,7 +47,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
   // Mails: a few per IP, and a few per address, so the form is not a way to spam someone.
   const mailIpLimiter = new RateLimiter(60 * 60 * 1000, 6);
   const mailAddressLimiter = new RateLimiter(24 * 60 * 60 * 1000, 3);
-  const admin = config.adminToken ? createAdminHandler({ pnm, config, adminToken: config.adminToken, keys }) : null;
+  const admin = config.adminToken ? createAdminHandler({ pnm, config, adminToken: config.adminToken, keys, closed }) : null;
   if (!admin) console.warn('ADMIN_TOKEN is not set: the /admin panel is disabled');
 
   const runtimeConfig: RuntimeConfig = {
@@ -79,7 +81,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
       ...(typeof body.title === 'string' ? { title: body.title } : {}),
       locale: isLocale(body.locale) ? body.locale : config.defaultLocale,
     };
-    sendJson(res, 200, await joinRoom(request, { pnm, config, keys }));
+    sendJson(res, 200, await joinRoom(request, { pnm, config, keys, closed }));
   }
 
   /** Sends the invitation link and the moderator link, in two mails, to the given address. */

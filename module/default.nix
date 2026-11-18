@@ -296,6 +296,16 @@ in
     };
 
     landing = {
+      stateDir = mkOption {
+        type = types.str;
+        default = "${config.services.palabre.stateDir}-landing";
+        defaultText = lib.literalExpression ''"''${config.services.palabre.stateDir}-landing"'';
+        description = ''
+          Persistent directory of the landing page, where the rooms closed to new guests from /admin
+          are remembered (so a restart does not open them again). It is created (owned by `user`);
+          its parent must exist.
+        '';
+      };
       package = mkOption {
         type = types.package;
         default = pkgs.callPackage ./landing/package.nix { };

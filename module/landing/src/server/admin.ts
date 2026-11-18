@@ -9,6 +9,7 @@ import { adminName } from './messages.js';
 import { FetchPastRoomsReqSchema, RoomEndReqSchema, createJoinUrl, createRequest } from './plugnmeet.js';
 import type { PnmApi } from './plugnmeet.js';
 import { WindowCounter } from './window-counter.js';
+import type { ClosedRooms } from './closed-rooms.js';
 import type { RoomKeys } from './rooms.js';
 import { ROOM_ID_RE as TAGGED_ROOM_ID_RE, ROOM_NAME_MAX, slugifyRoomId } from '../shared/slug.js';
 
@@ -52,10 +53,11 @@ export interface AdminDeps {
   config: Config;
   adminToken: string;
   keys: RoomKeys;
+  closed: ClosedRooms;
 }
 
 /** Returns a handler answering the /admin/login, /admin/logout and /admin/api/* routes. */
-export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps) {
+export function createAdminHandler({ pnm, config, adminToken, keys, closed }: AdminDeps) {
   const tokenDigest = sha256(adminToken);
   const failures = new WindowCounter(LOGIN_WINDOW_MS);
 
@@ -118,6 +120,7 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
     const active: (ActiveRoom & { sid: string })[] = (activeRes.status ? activeRes.rooms : []).map((r) => ({
       roomId: r.roomInfo?.roomId ?? '',
       mod: modOf(r.roomInfo?.roomId ?? ''),
+      closed: closed.has(r.roomInfo?.roomId ?? ''),
       title: r.roomInfo?.roomTitle ?? '',
       participants: r.participantsInfo.map((p) => p.name || '?'),
       created: String(r.roomInfo?.creationTime ?? ''),
@@ -130,6 +133,7 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
       .map((r) => ({
         roomId: r.roomId,
         mod: modOf(r.roomId),
+        closed: closed.has(r.roomId),
         title: r.roomTitle,
         participants: Number(r.joinedParticipants) || 0,
         created: String(r.created),
@@ -185,6 +189,8 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
         isPost &&
         (pathname === '/admin/api/rooms/join' ||
           pathname === '/admin/api/rooms/observe' ||
+          pathname === '/admin/api/rooms/close' ||
+          pathname === '/admin/api/rooms/reopen' ||
           pathname === '/admin/api/rooms/end')
       ) {
         if (!isSafeMutation(req)) return sendError(res, 400, 'invalid_request');
@@ -207,6 +213,13 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
           );
           console.log(`admin joined room ${roomId} as an invisible observer (from ${ip})`);
           sendJson(res, 200, { url });
+        } else if (pathname === '/admin/api/rooms/close' || pathname === '/admin/api/rooms/reopen') {
+          // No new guest; moderators and the administrator still get in, and whoever is
+          // already in the meeting stays.
+          const close = pathname === '/admin/api/rooms/close';
+          closed.set(roomId, close);
+          console.log(`admin ${close ? 'closed' : 'reopened'} room ${roomId} to new guests (from ${ip})`);
+          sendJson(res, 200, { ok: true });
         } else {
           const result = await pnm.endRoom(createRequest(RoomEndReqSchema, { roomId }));
           if (!result.status) throw new Error(result.msg || 'endRoom failed');

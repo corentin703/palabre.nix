@@ -21,6 +21,8 @@ export interface Config {
    * PlugNMeet secret when not given, which keeps the links issued before it existed valid.
    */
   roomKeySecret: string;
+  /** Where the closed rooms are remembered across restarts; absent: only until the next restart. */
+  closedRoomsFile: string | undefined;
   /** Absent: the /admin panel is disabled. */
   adminToken: string | undefined;
   defaultLocale: Locale;
@@ -86,6 +88,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     plugnmeetApiKey,
     plugnmeetSecret,
     roomKeySecret: env['ROOM_KEY_SECRET'] || plugnmeetSecret,
+    closedRoomsFile: env['CLOSED_ROOMS_FILE'] || undefined,
     adminToken: env['ADMIN_TOKEN'] || undefined,
     defaultLocale: isLocale(env['LANDING_DEFAULT_LOCALE']) ? env['LANDING_DEFAULT_LOCALE'] : 'fr',
     brandName: env['LANDING_BRAND_NAME'] || 'Visioconférence',

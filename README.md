@@ -120,6 +120,14 @@ to `nix.settings.substituters` and `nix.settings.trusted-public-keys` (this flak
 does it for its own commands). Maintainers: create the cache on cachix.org and add its
 auth token to the repository's secrets as `CACHIX_AUTH_TOKEN`.
 
+## Locking a room
+
+In `/admin`, **Lock** closes a room to new guests: the invitation link then answers that the
+meeting is closed, even if the room has ended and would otherwise be recreated. Moderators (moderator
+link, or the administrator joining or observing from `/admin`) still get in, and whoever is already
+in the meeting stays; **Unlock** reverses it. The list of locked rooms is kept in
+`services.palabre.landing.stateDir` (default `<stateDir>-landing`).
+
 ## Languages
 
 The landing page and the `/admin` panel exist in French and English. Each person gets the language

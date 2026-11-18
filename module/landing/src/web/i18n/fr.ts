@@ -129,6 +129,11 @@ export const fr = {
     copyInvitation: 'Copier le lien d’invitation',
     copyModerator: 'Copier le lien modérateur',
     copied: 'Copié',
+    lockRoom: 'Verrouiller',
+    unlockRoom: 'Déverrouiller',
+    lockHelp:
+      "Verrouillé : plus aucun nouvel invité ne peut rejoindre le salon. Les modérateurs (lien modérateur ou administration) peuvent toujours entrer, et les personnes déjà présentes restent.",
+    locked: 'Verrouillé',
     closeRoom: 'Fermer / supprimer',
     confirmClose: (title: string) =>
       `Fermer et supprimer le salon « ${title} » ?\n\nLes participants sont déconnectés. Le tableau blanc, le chat et les fichiers déposés sont effacés définitivement.`,
@@ -144,6 +149,7 @@ export const fr = {
     invalid_request: 'Requête invalide.',
     rate_limited: 'Le nombre de tentatives autorisé est dépassé ; veuillez patienter quelques minutes.',
     invalid_room: 'Intitulé de salon invalide (lettres, chiffres et tirets uniquement).',
+    room_closed: 'Cette réunion est fermée aux nouveaux participants ; veuillez vous adresser à son organisateur.',
     join_failed:
       "Il n'est pas possible de rejoindre le salon pour le moment ; veuillez réessayer ultérieurement.",
     bad_token: 'Jeton incorrect.',

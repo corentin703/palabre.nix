@@ -4,6 +4,7 @@ import type { Config } from './config.js';
 import { HttpError } from './http.js';
 import { CreateRoomReqSchema, IsRoomActiveReqSchema, createJoinUrl, createRequest } from './plugnmeet.js';
 import type { PnmApi } from './plugnmeet.js';
+import type { ClosedRooms } from './closed-rooms.js';
 import type { RoomKeys } from './rooms.js';
 import { guestName, welcomeMessage } from './messages.js';
 
@@ -11,6 +12,7 @@ export interface JoinDeps {
   pnm: PnmApi;
   config: Config;
   keys: RoomKeys;
+  closed: ClosedRooms;
 }
 
 /** What the browser typed, before we know which room it is about. */
@@ -48,9 +50,12 @@ function resolveRoom(request: JoinRequest, keys: RoomKeys): RoomTarget {
 }
 
 /** Creates the room if it is not open, then returns the meeting address. */
-export async function joinRoom(request: JoinRequest, { pnm, config, keys }: JoinDeps): Promise<JoinResponse> {
+export async function joinRoom(request: JoinRequest, { pnm, config, keys, closed }: JoinDeps): Promise<JoinResponse> {
   const displayName = request.name.trim().slice(0, 64) || guestName(request.locale);
   const { roomId, title, isModerator } = resolveRoom(request, keys);
+  // A closed room takes no new guest (not even to recreate it once it has ended); its
+  // moderators still get in.
+  if (!isModerator && closed.has(roomId)) throw new HttpError(403, 'room_closed');
 
   try {
     const active = await pnm.isRoomActive(createRequest(IsRoomActiveReqSchema, { roomId }));

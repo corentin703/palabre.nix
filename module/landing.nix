@@ -81,6 +81,10 @@ in
       }
     ];
 
+    systemd.tmpfiles.rules = [
+      "d ${lcfg.stateDir} 0750 ${ociUser} ${ociUser} -"
+    ];
+
     services.palabre.rendered.landing = {
       unit = "podman-palabre-landing";
       secrets = {
@@ -100,6 +104,7 @@ in
         PLUGNMEET_API_KEY=@PLUGNMEET_API_KEY@
         PLUGNMEET_SECRET=@PLUGNMEET_API_SECRET@
         ADMIN_TOKEN=@ADMIN_TOKEN@
+        CLOSED_ROOMS_FILE=/var/lib/palabre-landing/closed-rooms.json
         LANDING_THEME_COLOR=${lcfg.themeColor}
         LANDING_DEFAULT_LOCALE=${lcfg.defaultLocale}
       ''
@@ -132,7 +137,8 @@ in
         cfg.rendered.landing.path
       ];
       volumes =
-        lib.optional hasCss "${cssFile}:/etc/palabre/custom.css:ro"
+        [ "${lcfg.stateDir}:/var/lib/palabre-landing:rw" ]
+        ++ lib.optional hasCss "${cssFile}:/etc/palabre/custom.css:ro"
         ++ lib.optional (lcfg.logo != null) "${lcfg.logo}:${logoTarget}:ro";
       # Host network: the rootless container (pasta) cannot reach the host's
       # public IP (ECONNREFUSED), and has to reach PlugNMeet locally.
