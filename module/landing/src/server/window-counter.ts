@@ -5,7 +5,9 @@ export class WindowCounter {
   constructor(
     private readonly windowMs: number,
     private readonly now: () => number = Date.now,
-  ) {}
+  ) {
+    setInterval(() => this.sweep(), Math.min(windowMs, 60_000)).unref();
+  }
 
   /** Counts an event and returns the total of the current window (1 for the first). */
   increment(key: string): number {
@@ -27,6 +29,23 @@ export class WindowCounter {
 
   reset(key: string): void {
     this.entries.delete(key);
+  }
+
+  /** Number of keys still held (for the tests). */
+  get size(): number {
+    return this.entries.size;
+  }
+
+  /**
+   * Forgets the keys whose window is over, so an IP is not kept in memory once its window has
+   * passed. A timer (that does not keep the process alive) rather than the next request: with
+   * no traffic, nothing would clean up.
+   */
+  private sweep(): void {
+    const now = this.now();
+    for (const [key, entry] of this.entries) {
+      if (now > entry.resetAt) this.entries.delete(key);
+    }
   }
 }
 

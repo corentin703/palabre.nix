@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RateLimiter, WindowCounter } from './window-counter';
 
 describe('WindowCounter', () => {
@@ -19,6 +19,22 @@ describe('WindowCounter', () => {
     expect(counter.peek('b')).toBe(0);
     counter.reset('a');
     expect(counter.peek('a')).toBe(0);
+  });
+});
+
+describe('WindowCounter memory', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('does not keep a key once its window is over, even with no further traffic', () => {
+    vi.useFakeTimers();
+    const counter = new WindowCounter(5 * 60 * 1000);
+    counter.increment('1.2.3.4');
+    counter.increment('5.6.7.8');
+    expect(counter.size).toBe(2);
+    vi.advanceTimersByTime(4 * 60 * 1000);
+    expect(counter.size).toBe(2);
+    vi.advanceTimersByTime(2 * 60 * 1000);
+    expect(counter.size).toBe(0);
   });
 });
 
