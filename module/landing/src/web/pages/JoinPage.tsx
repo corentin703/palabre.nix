@@ -2,10 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { RoomKey, RuntimeConfig } from '../../shared/api';
 import { ROOM_ID_RE, ROOM_NAME_MAX, slugifyRoomId } from '../../shared/slug';
-import { getRoomInfo, getRoomKey, joinRoom, lockRoom, sendLinks } from '../api';
+import { ApiFailure, getRoomInfo, getRoomKey, joinRoom, lockRoom } from '../api';
 import { Guide } from '../components/Guide';
 import { InstallBanner } from '../components/InstallBanner';
-import { EmailHistory } from '../components/EmailHistory';
 import { History } from '../components/History';
 import { ShareLinks } from '../components/ShareLinks';
 import { LocaleSwitcher, useI18n } from '../i18n';
@@ -14,10 +13,8 @@ import {
   clearHistory,
   findRoomKey,
   loadHistory,
-  loadEmails,
   loadName,
   rememberMeeting,
-  rememberEmail,
   saveName,
   saveRoomKey,
 } from '../room-storage';
@@ -102,12 +99,6 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
   const [history, setHistory] = useState(loadHistory);
   const [status, setStatus] = useState<'idle' | 'preparing' | 'connecting'>('idle');
   const [error, setError] = useState('');
-  const [askMail, setAskMail] = useState<{ roomId: string; mod: string } | null>(null);
-  const [mailHistory, setMailHistory] = useState(loadEmails);
-  const [mailAddress, setMailAddress] = useState(() => loadEmails()[0] ?? '');
-  const [mailSent, setMailSent] = useState(false);
-  /** Room whose links were already sent (by the question or by the form under the links): no need to ask again. */
-  const [mailedRoom, setMailedRoom] = useState('');
   const [moderator, setModerator] = useState(false);
   const [locked, setLocked] = useState(false);
   const roomKey = useRoomKey(roomInput, !preset);
@@ -126,16 +117,13 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
       .catch(() => setModerator(false));
   }, [preset]);
 
-  // Room shown under the form: its identifier and the moderator key, if any.
-  const shown = preset
-    ? { roomId: preset.room, mod: moderator ? preset.mod : '' }
-    : roomKey.key
-      ? { roomId: `${roomKey.name}-${roomKey.key.tag}`, mod: roomKey.key.mod }
-      : null;
+  // Links shown under the form: only on the page of an existing room (the creation page leads
+  // to the moderator's own page, where they are).
+  const shown = preset ? { roomId: preset.room, mod: moderator ? preset.mod : '' } : null;
 
   /** The room's links, and their sending by email. */
   const shareLinks = (room: { roomId: string; mod: string }) => (
-    <ShareLinks roomId={room.roomId} mod={room.mod} mail={config.mail} onMailSent={() => setMailedRoom(room.roomId)} />
+    <ShareLinks roomId={room.roomId} mod={room.mod} mail={config.mail} />
   );
 
   /** A moderator closes the room to new guests, or opens it again. */
@@ -164,89 +152,55 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
     meetingTab.current = null;
   }
 
-  /** Opens the room (creating it if needed) and goes to the meeting. */
-  async function enter(roomId: string, mod: string) {
+  /** Opens the room (creating it if needed) and goes to the meeting, in the tab opened for it. */
+  async function enter(room: Preset) {
     setStatus('connecting');
     try {
-      const { url } = await joinRoom({
-        room: roomId || roomInput,
-        name,
-        mod,
-        locale,
-        ...(preset ? {} : { title: roomInput.trim() }),
-      });
-      if (roomId) {
-        rememberMeeting({ slug: roomId, title: roomInput.trim() || roomId.replace(/-[0-9a-f]{12}$/, ''), mod, at: Date.now() });
-      }
+      const { url } = await joinRoom({ room: room.room, name, mod: room.mod, locale });
+      rememberMeeting({ slug: room.room, title: room.room.replace(/-[0-9a-f]{12}$/, ''), mod: room.mod, at: Date.now() });
       saveName(name.trim());
       if (meetingTab.current) {
         meetingTab.current.location.href = url;
         meetingTab.current = null;
         // This page stays as it is, ready for another visit.
-        setAskMail(null);
         setStatus('idle');
       } else {
         location.assign(url);
       }
     } catch (failure) {
       closeMeetingTab();
-      // Back to the main form: the links, if they were sent, are not sent (nor asked) again.
-      setAskMail(null);
       setError(errorMessage(t, failure));
       setStatus('idle');
     }
   }
 
+  /**
+   * On a room's page: joins the meeting. On the creation page: the room is not entered, we go
+   * to the moderator's own page, which has the links, the settings and the way in.
+   */
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
-    openMeetingTab();
-    try {
-      // Room key not received yet: we ask for it now rather than wait for the pause.
-      let key = roomKey.key;
-      if (!preset && !key && roomKey.name) {
-        setStatus('preparing');
-        key = await roomKey.obtain(roomKey.name);
-      }
-      const mod = preset ? preset.mod : (key?.mod ?? '');
-      const roomId = preset ? preset.room : key ? `${roomKey.name}-${key.tag}` : '';
-      // New room, and mails are possible: before entering, offer to get the links by email.
-      if (config.mail && !preset && mod && roomId && mailedRoom !== roomId) {
-        closeMeetingTab();
-        setStatus('idle');
-        setAskMail({ roomId, mod });
-        return;
-      }
-      await enter(roomId, mod);
-    } catch (failure) {
-      closeMeetingTab();
-      setError(errorMessage(t, failure));
-      setStatus('idle');
-    }
-  }
-
-  /** "Send and enter": the links are sent first, then we go to the meeting. */
-  async function sendThenEnter(event: FormEvent) {
-    event.preventDefault();
-    if (!askMail) return;
-    setError('');
-    setStatus('connecting');
-    openMeetingTab();
-    try {
-      await sendLinks({ room: askMail.roomId, mod: askMail.mod, email: mailAddress.trim(), locale });
-      rememberEmail(mailAddress);
-      setMailHistory(loadEmails());
-    } catch (failure) {
-      // The person stays on the question: they can fix the address, or enter without mail.
-      closeMeetingTab();
-      setError(errorMessage(t, failure));
-      setStatus('idle');
+    if (preset) {
+      openMeetingTab();
+      await enter(preset);
       return;
     }
-    setMailSent(true);
-    setMailedRoom(askMail.roomId);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    await enter(askMail.roomId, askMail.mod);
+    try {
+      // Room key not confirmed yet: we ask for it now rather than wait for the pause.
+      if (!roomKey.name) throw new ApiFailure('invalid_room', 400);
+      if (!roomKey.key) setStatus('preparing');
+      const key = roomKey.key ?? (await roomKey.obtain(roomKey.name));
+      if (!key) throw new ApiFailure('join_failed', 502);
+      const room = `${roomKey.name}-${key.tag}`;
+      // The name is optional here; typed, it is waiting on the next page.
+      saveName(name.trim());
+      rememberMeeting({ slug: room, title: roomInput.trim() || roomKey.name, mod: key.mod, at: Date.now() });
+      location.assign(`/r/${room}?m=${key.mod}`);
+    } catch (failure) {
+      setError(errorMessage(t, failure));
+      setStatus('idle');
+    }
   }
 
   const roomLabel = preset ? (ROOM_ID_RE.exec(preset.room)?.[1] ?? preset.room) : '';
@@ -277,54 +231,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
         {config.pwa && <InstallBanner />}
         {preset && moderator && <p className="banner">{t.join.moderatorBanner}</p>}
 
-        {askMail && (
-          <form id="mail-form" onSubmit={sendThenEnter}>
-            <h2>{t.join.mailAskTitle}</h2>
-            <p>{t.join.mailAskText}</p>
-            <div className="field">
-              <label htmlFor="mail-address">{t.share.emailLabel}</label>
-              <input
-                id="mail-address"
-                type="email"
-                required
-                autoFocus
-                autoComplete="email"
-                placeholder={t.share.emailPlaceholder}
-                value={mailAddress}
-                onChange={(e) => {
-                  setMailAddress(e.target.value);
-                  setError('');
-                }}
-              />
-            </div>
-            <EmailHistory
-              emails={mailHistory}
-              onPick={(picked) => {
-                setMailAddress(picked);
-                setError('');
-              }}
-            />
-            {mailSent && (
-              <p className="banner" role="status">
-                {t.share.emailSent}
-              </p>
-            )}
-            <button type="submit" id="join-button" disabled={status !== 'idle'}>
-              {status === 'connecting' ? (mailSent ? t.join.connecting : t.share.emailSending) : t.join.mailAskSend}
-            </button>
-            <button
-              type="button"
-              disabled={status !== 'idle'}
-              onClick={() => {
-                openMeetingTab();
-                void enter(askMail.roomId, askMail.mod);
-              }}
-            >
-              {t.join.mailAskSkip}
-            </button>
-          </form>
-        )}
-        <form id="join-form" onSubmit={submit} hidden={askMail !== null}>
+        <form id="join-form" onSubmit={submit}>
           {preset ? (
             <div className="field">
               <span id="room-label">
@@ -354,7 +261,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
             <input
               id="name"
               type="text"
-              required
+              required={preset !== null}
               maxLength={64}
               autoComplete="name"
               placeholder={t.join.namePlaceholder}

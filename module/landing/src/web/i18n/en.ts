@@ -13,7 +13,7 @@ export const en: Messages = {
   join: {
     titleNew: 'Video conference',
     titleExisting: 'Join the video conference',
-    leadNew: 'Please enter a name for the room and your first name, then confirm.',
+    leadNew: 'Please enter a name for the room (and, if you wish, your first name), then click “Create the links”.',
     leadExisting: 'Please enter your first name, then confirm with the main button.',
     moderatorBanner: 'You are joining this room as a moderator.',
     settings: 'Room settings',
@@ -26,17 +26,12 @@ export const en: Messages = {
     roomPlaceholder: 'for example: team-meeting',
     yourName: 'Your first name',
     namePlaceholder: 'for example: Alex',
-    submitNew: 'Confirm and enter the room',
+    submitNew: 'Create the links',
     submitExisting: 'Join the video conference',
     preparing: 'Preparing the room…',
-    mailAskTitle: 'Get the links by email?',
-    mailAskText:
-      'Before you enter, you can get two emails: one with the invitation link to send to the participants, one with your moderator link, which lets you get your rights back later. Your address is not kept.',
-    mailAskSend: 'Send the links and enter the room',
-    mailAskSkip: 'No thanks, enter the room',
     connecting: 'Connecting…',
     soleModeratorNote:
-      "You will be the only moderator of this room. Two links will be offered below: one to send to the other participants, the other to keep for yourself.",
+      "You will land on your moderator page: there you copy the two links (one to send to the other participants, the other to keep for yourself), set up the room, then enter the meeting.",
   },
 
   share: {
@@ -69,9 +64,9 @@ export const en: Messages = {
       'Then confirm by clicking the main button <b>“Join the video conference”</b>.',
     ],
     stepsNew: [
-      'Please choose a <b>name for the room</b>, for example <em>team-meeting</em>. Two links are then generated (see below).',
-      'Please enter <b>your first name</b>.',
-      'Confirm by clicking the main button <b>“Confirm and enter the room”</b>.',
+      'Please choose a <b>name for the room</b>, for example <em>team-meeting</em>, and, if you wish, enter <b>your first name</b>.',
+      'Click the main button <b>“Create the links”</b>: you land on your moderator page, where you copy the two links (see below) and set up the room.',
+      'On that page, enter <b>your first name</b> if it is not there, then click <b>“Join the video conference”</b>.',
     ],
     stepsCommon: [
       'Your browser then asks for permission to use the <b>camera</b> and the <b>microphone</b>: please click <b>“Allow”</b>. Otherwise nobody will be able to see or hear you.',
@@ -93,7 +88,7 @@ export const en: Messages = {
       'You are entering as a <b>regular participant</b>. Only the person who created the room, and those they gave their moderator link to, moderate it.',
     twoLinks: 'The two links and what they do',
     twoLinksIntro:
-      'As soon as the room name is entered, <b>two links</b> appear under the form. Click <b>“Copy”</b> to copy one, then paste it into an email or a message (right click, “Paste”).',
+      'On your moderator page, <b>two links</b> appear under the form. Click <b>“Copy”</b> to copy one, then paste it into an email or a message (right click, “Paste”).',
     participantsLinkRole:
       '<b>The link to send to the other participants</b>: anyone who opens it enters the room as a <b>regular participant</b>, after giving their first name.',
     moderatorLinkRole:

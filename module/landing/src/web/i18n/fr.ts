@@ -15,7 +15,7 @@ export const fr = {
   join: {
     titleNew: 'Visioconférence',
     titleExisting: 'Rejoindre la visioconférence',
-    leadNew: 'Veuillez indiquer l’intitulé du salon ainsi que votre prénom, puis valider.',
+    leadNew: 'Veuillez indiquer l’intitulé du salon (et, si vous le souhaitez, votre prénom), puis cliquer sur « Créer les liens ».',
     leadExisting: 'Veuillez renseigner votre prénom, puis valider d’un clic sur le bouton principal.',
     moderatorBanner: 'Vous rejoignez ce salon en tant que modérateur.',
     settings: 'Paramètres du salon',
@@ -28,17 +28,12 @@ export const fr = {
     roomPlaceholder: 'par exemple : reunion-bureau',
     yourName: 'Votre prénom',
     namePlaceholder: 'par exemple : Camille',
-    submitNew: 'Valider et entrer dans le salon',
+    submitNew: 'Créer les liens',
     submitExisting: 'Rejoindre la visioconférence',
     preparing: 'Préparation du salon…',
-    mailAskTitle: 'Recevoir les liens par courriel ?',
-    mailAskText:
-      'Avant d’entrer, vous pouvez recevoir deux courriels : l’un avec le lien d’invitation à transmettre aux participants, l’autre avec votre lien de modérateur, qui vous permet de retrouver vos droits plus tard. Votre adresse n’est pas conservée.',
-    mailAskSend: 'Envoyer les liens et entrer dans le salon',
-    mailAskSkip: 'Non merci, entrer dans le salon',
     connecting: 'Connexion en cours…',
     soleModeratorNote:
-      "Vous serez le seul modérateur de ce salon. Deux liens vous seront proposés ci-dessous : l'un à transmettre aux autres participants, l'autre à conserver pour vous.",
+      "Vous arriverez sur votre page de modérateur : vous y copierez les deux liens (l'un à transmettre aux autres participants, l'autre à conserver pour vous), règlerez le salon, puis entrerez dans la réunion.",
   },
 
   share: {
@@ -71,9 +66,9 @@ export const fr = {
       'Validez ensuite en cliquant sur le bouton principal <b>« Rejoindre la visioconférence »</b>.',
     ],
     stepsNew: [
-      'Veuillez choisir un <b>intitulé pour le salon</b>, par exemple <em>reunion-bureau</em>. Deux liens sont alors générés (voir plus bas).',
-      'Veuillez saisir <b>votre prénom</b>.',
-      'Validez en cliquant sur le bouton principal <b>« Valider et entrer dans le salon »</b>.',
+      'Veuillez choisir un <b>intitulé pour le salon</b>, par exemple <em>reunion-bureau</em>, et, si vous le souhaitez, saisir <b>votre prénom</b>.',
+      'Cliquez sur le bouton principal <b>« Créer les liens »</b> : vous arrivez sur votre page de modérateur, où vous copiez les deux liens (voir plus bas) et réglez le salon.',
+      'Sur cette page, indiquez <b>votre prénom</b> s\'il n\'y est pas, puis cliquez sur <b>« Rejoindre la visioconférence »</b>.',
     ],
     stepsCommon: [
       "Votre navigateur sollicite alors l'autorisation d'employer la <b>caméra</b> et le <b>micro</b> : veuillez cliquer sur <b>« Autoriser »</b>. À défaut, nul ne pourra vous voir ni vous entendre.",
@@ -95,7 +90,7 @@ export const fr = {
       'Vous entrez en <b>simple participant</b>. Seule la personne qui a créé le salon, ainsi que celles à qui elle a confié son lien de modérateur, en assure la modération.',
     twoLinks: 'Les deux liens et leur rôle',
     twoLinksIntro:
-      "Dès que l'intitulé du salon est saisi, <b>deux liens</b> apparaissent sous le formulaire. Cliquez sur <b>« Copier »</b> pour en recopier un, puis collez-le dans un courriel ou un message (clic droit, « Coller »).",
+      "Sur votre page de modérateur, <b>deux liens</b> apparaissent sous le formulaire. Cliquez sur <b>« Copier »</b> pour en recopier un, puis collez-le dans un courriel ou un message (clic droit, « Coller »).",
     participantsLinkRole:
       '<b>Le lien à transmettre aux autres participants</b> : toute personne qui l\'ouvre entre dans le salon en <b>simple participant</b>, après avoir indiqué son prénom.',
     moderatorLinkRole:
