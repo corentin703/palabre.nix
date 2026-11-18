@@ -137,10 +137,11 @@ in
       environmentFiles = [
         cfg.rendered.landing.path
       ];
-      volumes =
-        [ "${lcfg.stateDir}:/var/lib/palabre-landing:rw" ]
-        ++ lib.optional hasCss "${cssFile}:/etc/palabre/custom.css:ro"
-        ++ lib.optional (lcfg.logo != null) "${lcfg.logo}:${logoTarget}:ro";
+      volumes = [
+        "${lcfg.stateDir}:/var/lib/palabre-landing:rw"
+      ]
+      ++ lib.optional hasCss "${cssFile}:/etc/palabre/custom.css:ro"
+      ++ lib.optional (lcfg.logo != null) "${lcfg.logo}:${logoTarget}:ro";
       # Host network: the rootless container (pasta) cannot reach the host's
       # public IP (ECONNREFUSED), and has to reach PlugNMeet locally.
       extraOptions = [ "--network=host" ];
