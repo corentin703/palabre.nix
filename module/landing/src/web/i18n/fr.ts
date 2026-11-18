@@ -18,12 +18,11 @@ export const fr = {
     leadNew: 'Veuillez indiquer l’intitulé du salon ainsi que votre prénom, puis valider.',
     leadExisting: 'Veuillez renseigner votre prénom, puis valider d’un clic sur le bouton principal.',
     moderatorBanner: 'Vous rejoignez ce salon en tant que modérateur.',
-    lock: 'Verrouiller le salon',
-    unlock: 'Déverrouiller le salon',
-    lockedNote:
-      'Salon verrouillé : plus aucun nouvel invité ne peut le rejoindre. Les modérateurs peuvent toujours entrer, et les personnes déjà présentes restent.',
+    settings: 'Paramètres du salon',
+    locked: 'Verrouillé',
+    lockLabel: 'Fermer le salon aux nouveaux invités',
     lockHelp:
-      'Verrouillez le salon une fois tout le monde arrivé : un nouvel invité qui ouvre le lien d’invitation est refusé. Vous pouvez le déverrouiller à tout moment.',
+      'Une fois tout le monde arrivé, un nouvel invité qui ouvre le lien d’invitation est refusé. Les modérateurs peuvent toujours entrer et les personnes présentes restent.',
     room: 'Salon',
     roomName: 'Intitulé du salon',
     roomPlaceholder: 'par exemple : reunion-bureau',

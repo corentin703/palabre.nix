@@ -136,7 +136,8 @@ toujours, et les personnes déjà présentes restent ; **Déverrouiller** annule
 verrouillées est conservée dans `services.palabre.landing.stateDir` (par défaut `<stateDir>-landing`).
 
 Un modérateur peut le faire depuis la page du salon : ouvrir le lien modérateur
-(`/r/<salon>?m=<clé>`), puis **Verrouiller le salon** / **Déverrouiller le salon**.
+(`/r/<salon>?m=<clé>`), puis
+ouvrir **Paramètres du salon** : on y trouve les liens, leur envoi par courriel, et **Fermer le salon aux nouveaux invités**.
 
 ## Langues
 

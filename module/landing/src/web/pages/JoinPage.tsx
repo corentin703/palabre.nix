@@ -119,6 +119,11 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
       ? { roomId: `${roomKey.name}-${roomKey.key.tag}`, mod: roomKey.key.mod }
       : null;
 
+  /** The room's links, and their sending by email. */
+  const shareLinks = (room: { roomId: string; mod: string }) => (
+    <ShareLinks roomId={room.roomId} mod={room.mod} mail={config.mail} onMailSent={() => setMailedRoom(room.roomId)} />
+  );
+
   /** A moderator closes the room to new guests, or opens it again. */
   async function toggleLock() {
     if (!preset) return;
@@ -228,14 +233,6 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
         )}
         {config.pwa && <InstallBanner />}
         {preset && moderator && <p className="banner">{t.join.moderatorBanner}</p>}
-        {preset && moderator && (
-          <div className="lock">
-            <p className="note">{locked ? t.join.lockedNote : t.join.lockHelp}</p>
-            <button type="button" onClick={() => void toggleLock()}>
-              {locked ? t.join.unlock : t.join.lock}
-            </button>
-          </div>
-        )}
 
         {askMail && (
           <form id="mail-form" onSubmit={sendThenEnter}>
@@ -326,7 +323,24 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
         </form>
         {!preset && <p className="note">{t.join.soleModeratorNote}</p>}
 
-        {shown && <ShareLinks roomId={shown.roomId} mod={shown.mod} mail={config.mail} onMailSent={() => setMailedRoom(shown.roomId)} />}
+        {preset && moderator && (
+          <details className="settings">
+            <summary>
+              {t.join.settings}
+              {locked && <span className="badge">{t.join.locked}</span>}
+            </summary>
+            <label className="option">
+              <input type="checkbox" checked={locked} onChange={() => void toggleLock()} />
+              <span>
+                <strong>{t.join.lockLabel}</strong>
+                <span className="note">{t.join.lockHelp}</span>
+              </span>
+            </label>
+            {shown && shareLinks(shown)}
+          </details>
+        )}
+
+        {shown && !(preset && moderator) && shareLinks(shown)}
         <History
           items={history}
           onClear={() => {

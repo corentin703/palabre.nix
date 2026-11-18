@@ -16,12 +16,11 @@ export const en: Messages = {
     leadNew: 'Please enter a name for the room and your first name, then confirm.',
     leadExisting: 'Please enter your first name, then confirm with the main button.',
     moderatorBanner: 'You are joining this room as a moderator.',
-    lock: 'Lock the room',
-    unlock: 'Unlock the room',
-    lockedNote:
-      'Room locked: no new guest can join it. Moderators can still get in, and the people already there stay.',
+    settings: 'Room settings',
+    locked: 'Locked',
+    lockLabel: 'Close the room to new guests',
     lockHelp:
-      'Lock the room once everyone has arrived: a new guest opening the invitation link is turned away. You can unlock it at any time.',
+      'Once everyone has arrived, a new guest opening the invitation link is turned away. Moderators can still get in and the people already there stay.',
     room: 'Room',
     roomName: 'Room name',
     roomPlaceholder: 'for example: team-meeting',

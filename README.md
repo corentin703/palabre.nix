@@ -134,7 +134,7 @@ in the meeting stays; **Unlock** reverses it. The list of locked rooms is kept i
 `services.palabre.landing.stateDir` (default `<stateDir>-landing`).
 
 A moderator can do the same from the room's page: open the moderator link (`/r/<room>?m=<key>`), then
-**Lock the room** / **Unlock the room**.
+open **Room settings**: it holds the links, their sending by email, and **Close the room to new guests**.
 
 ## Languages
 
