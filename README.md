@@ -41,6 +41,10 @@ services.palabre = {
     plugnmeetApiKeyFile = config.sops.secrets.plugnmeet-api-key.path;
     plugnmeetApiSecretFile = config.sops.secrets.plugnmeet-api-secret.path;
     adminTokenFile = config.sops.secrets.palabre-admin-token.path;   # token of the /admin panel
+    # Optional: secret the moderator links are derived from, apart from the PlugNMeet secret
+    # (e.g. `openssl rand -hex 32`). Without it the PlugNMeet secret is used, and existing links
+    # stay valid; setting or changing it invalidates every moderator link.
+    roomKeySecretFile = config.sops.secrets.palabre-room-key-secret.path;
     natsUserSeedFile = config.sops.secrets.nats-user-seed.path;
     natsCalloutIssuerSeedFile = config.sops.secrets.nats-callout-issuer-seed.path;
     natsCalloutXkeySeedFile = config.sops.secrets.nats-callout-xkey-seed.path;

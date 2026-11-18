@@ -225,6 +225,17 @@ in
         type = secretFile;
         description = "File containing the token of the /admin panel.";
       };
+      roomKeySecretFile = mkOption {
+        type = types.nullOr secretFile;
+        default = null;
+        description = ''
+          File containing the secret the moderator links (`?m=`) are derived from. Distinct from
+          the PlugNMeet API secret, so neither has to change (or can leak) with the other.
+
+          When null, the PlugNMeet API secret is used, which keeps the existing links valid.
+          Setting it, or changing it later, invalidates every existing moderator link: generate it with e.g. `openssl rand -hex 32`.
+        '';
+      };
       natsUserSeedFile = mkOption {
         type = secretFile;
         description = "File containing PlugNMeet's nkey \"user\" seed (`nats.userNkey` is its public key).";

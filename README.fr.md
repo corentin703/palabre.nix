@@ -41,6 +41,10 @@ services.palabre = {
     plugnmeetApiKeyFile = config.sops.secrets.plugnmeet-api-key.path;
     plugnmeetApiSecretFile = config.sops.secrets.plugnmeet-api-secret.path;
     adminTokenFile = config.sops.secrets.palabre-admin-token.path;   # jeton du panneau /admin
+    # Facultatif : secret dont dérivent les liens modérateur, distinct du secret PlugNMeet
+    # (p. ex. `openssl rand -hex 32`). Sans lui, le secret PlugNMeet est utilisé et les liens
+    # existants restent valables ; le définir ou le changer invalide tous les liens modérateur.
+    roomKeySecretFile = config.sops.secrets.palabre-room-key-secret.path;
     natsUserSeedFile = config.sops.secrets.nats-user-seed.path;
     natsCalloutIssuerSeedFile = config.sops.secrets.nats-callout-issuer-seed.path;
     natsCalloutXkeySeedFile = config.sops.secrets.nats-callout-xkey-seed.path;

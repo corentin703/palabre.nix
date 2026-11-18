@@ -36,7 +36,7 @@ const RATE_WINDOW_MS = 5 * 60 * 1000;
 
 /** The server's routes: the JSON API, the files, and the web application for the pages. */
 export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwaIcons }: AppDeps): RequestListener {
-  const keys = createRoomKeys(config.plugnmeetSecret);
+  const keys = createRoomKeys(config.roomKeySecret);
   const joinLimiter = new RateLimiter(RATE_WINDOW_MS, 10);
   // Separate limiter for key creation (one per new room name typed).
   const keyLimiter = new RateLimiter(RATE_WINDOW_MS, 60);

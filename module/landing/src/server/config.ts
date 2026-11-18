@@ -15,6 +15,12 @@ export interface Config {
   plugnmeetApiUrl: string;
   plugnmeetApiKey: string;
   plugnmeetSecret: string;
+  /**
+   * Secret the moderator keys are derived from (ROOM_KEY_SECRET). Distinct from the PlugNMeet
+   * secret so that one never has to change, or leak, with the other; it falls back to the
+   * PlugNMeet secret when not given, which keeps the links issued before it existed valid.
+   */
+  roomKeySecret: string;
   /** Absent: the /admin panel is disabled. */
   adminToken: string | undefined;
   defaultLocale: Locale;
@@ -79,6 +85,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     plugnmeetApiUrl: env['PLUGNMEET_API_URL'] || plugnmeetHost,
     plugnmeetApiKey,
     plugnmeetSecret,
+    roomKeySecret: env['ROOM_KEY_SECRET'] || plugnmeetSecret,
     adminToken: env['ADMIN_TOKEN'] || undefined,
     defaultLocale: isLocale(env['LANDING_DEFAULT_LOCALE']) ? env['LANDING_DEFAULT_LOCALE'] : 'fr',
     brandName: env['LANDING_BRAND_NAME'] || 'Visioconférence',

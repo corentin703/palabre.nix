@@ -181,6 +181,7 @@ in
         export PLUGNMEET_HOST=http://localhost:${toString ports.public}
         export PLUGNMEET_API_URL=http://127.0.0.1:${toString ports.plugnmeet}
         export PLUGNMEET_API_KEY=${apiKey} PLUGNMEET_SECRET=${apiSecret}
+        export ROOM_KEY_SECRET=dev-room-key-secret
         export ADMIN_TOKEN=admin-token LANDING_BRAND_NAME="Palabre (dev)"
         export MAIL_HOST=127.0.0.1 MAIL_PORT=${toString ports.smtp} MAIL_SECURITY=none MAIL_FROM=visio@palabre.test
         exec node --watch-path=dist dist/server/main.js

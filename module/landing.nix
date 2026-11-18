@@ -88,6 +88,9 @@ in
         PLUGNMEET_API_SECRET = cfg.secrets.plugnmeetApiSecretFile;
         ADMIN_TOKEN = cfg.secrets.adminTokenFile;
       }
+      // lib.optionalAttrs (cfg.secrets.roomKeySecretFile != null) {
+        ROOM_KEY_SECRET = cfg.secrets.roomKeySecretFile;
+      }
       // lib.listToAttrs (map (name: lib.nameValuePair mailEnv.${name} (mailFile name)) mailFiles);
       content = ''
         PORT=${toString cfg.ports.landing}
@@ -100,6 +103,7 @@ in
         LANDING_THEME_COLOR=${lcfg.themeColor}
         LANDING_DEFAULT_LOCALE=${lcfg.defaultLocale}
       ''
+      + lib.optionalString (cfg.secrets.roomKeySecretFile != null) "ROOM_KEY_SECRET=@ROOM_KEY_SECRET@\n"
       + lib.concatMapStrings (name: "${mailEnv.${name}}=@${mailEnv.${name}}@\n") mailFiles;
     };
 

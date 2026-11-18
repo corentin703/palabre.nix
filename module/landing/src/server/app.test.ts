@@ -317,6 +317,17 @@ describe('administration panel', () => {
     expect((await postJson('/admin/api/rooms/observe', { roomId: 'salon-0123456789ab' })).status).toBe(401);
   });
 
+  it('derives the moderator keys from ROOM_KEY_SECRET when given, not from the PlugNMeet secret', async () => {
+    const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await start({ ROOM_KEY_SECRET: 'another secret' });
+    const info = await fetch(`${base}/visio-api/room-info?room=salon-${tag}&m=${mod}`);
+    expect(await info.json()).toMatchObject({ moderator: false });
+    const fresh = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
+    const own = await fetch(`${base}/visio-api/room-info?room=salon-${fresh.tag}&m=${fresh.mod}`);
+    expect(await own.json()).toMatchObject({ moderator: true });
+  });
+
   it('refuses a request that changes something without being JSON from this same site', async () => {
     const wrongType = await fetch(`${base}/admin/login`, { method: 'POST', body: '{}' });
     expect(wrongType.status).toBe(400);

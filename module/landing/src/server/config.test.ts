@@ -63,3 +63,16 @@ describe('mail settings', () => {
     expect(() => loadConfig({ ...mail, MAIL_SECURITY: 'maybe' })).toThrow('MAIL_SECURITY');
   });
 });
+
+describe('moderator key secret', () => {
+  const base = { PLUGNMEET_HOST: 'https://v.example', PLUGNMEET_API_KEY: 'k', PLUGNMEET_SECRET: 's' };
+
+  it('falls back to the PlugNMeet secret, so the links issued before it existed stay valid', () => {
+    expect(loadConfig(base).roomKeySecret).toBe('s');
+    expect(loadConfig({ ...base, ROOM_KEY_SECRET: '' }).roomKeySecret).toBe('s');
+  });
+
+  it('uses its own when given', () => {
+    expect(loadConfig({ ...base, ROOM_KEY_SECRET: 'r' }).roomKeySecret).toBe('r');
+  });
+});
