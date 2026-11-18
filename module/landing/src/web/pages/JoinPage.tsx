@@ -22,6 +22,9 @@ import {
 } from '../room-storage';
 import '../styles/page.css';
 
+/** Query parameter asking the moderator's page to warn about sending the links by email. */
+const EMAIL_WARNING_PARAM = 'displayEmailSendWarning';
+
 /** Link to an existing room: /r/<room>, with the moderator key, if any, in ?m=. */
 interface Preset {
   room: string;
@@ -103,8 +106,16 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
   const [error, setError] = useState('');
   const [moderator, setModerator] = useState(false);
   const [locked, setLocked] = useState(false);
-  /** Links not yet sent from this device when the page opened: they are asked for, all along the visit. */
-  const [askToMail] = useState(() => preset !== null && !wasMailed(preset.room));
+  /**
+   * The email warning is for the page the creation leads to (?displayEmailSendWarning=true),
+   * and only while the links were not sent from this device: it stays all along the visit.
+   */
+  const [askToMail] = useState(
+    () =>
+      preset !== null &&
+      new URLSearchParams(location.search).get(EMAIL_WARNING_PARAM) === 'true' &&
+      !wasMailed(preset.room),
+  );
   const roomKey = useRoomKey(roomInput, !preset);
 
   // Moderator link of an existing room: the server checks the key, and we keep it so the
@@ -203,7 +214,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
       // The name is optional here; typed, it is waiting on the next page.
       saveName(name.trim());
       rememberMeeting({ slug: room, title: roomInput.trim() || roomKey.name, mod: key.mod, at: Date.now() });
-      location.assign(`/r/${room}?m=${key.mod}`);
+      location.assign(`/r/${room}?m=${key.mod}&${EMAIL_WARNING_PARAM}=true`);
     } catch (failure) {
       setError(errorMessage(t, failure));
       setStatus('idle');
