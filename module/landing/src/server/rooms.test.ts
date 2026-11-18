@@ -18,10 +18,10 @@ describe('createRoomKeys', () => {
     expect(createRoomKeys('secret').matches(undefined, mod)).toBe(false);
   });
 
-  it('still accepts a key issued before keys were derived from the tag', () => {
+  it('only accepts the key derived from the tag: a made-up key, whatever it is, is not one', () => {
     const keys = createRoomKeys('secret');
-    const legacyMod = 'a'.repeat(32);
-    expect(keys.matches(keys.tagOf(legacyMod), legacyMod)).toBe(true);
+    const { tag } = keys.newKey();
+    for (const guess of ['a'.repeat(32), tag.repeat(3).slice(0, 32)]) expect(keys.matches(tag, guess)).toBe(false);
   });
 
   it('draws different keys', () => {

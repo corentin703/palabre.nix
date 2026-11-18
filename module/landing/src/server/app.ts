@@ -40,6 +40,8 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
   const joinLimiter = new RateLimiter(RATE_WINDOW_MS, 10);
   // Separate limiter for key creation (one per new room name typed).
   const keyLimiter = new RateLimiter(RATE_WINDOW_MS, 60);
+  // Whoever asks whether a key is a moderator's is a guesser: it is not left unlimited.
+  const infoLimiter = new RateLimiter(RATE_WINDOW_MS, 120);
   // Mails: a few per IP, and a few per address, so the form is not a way to spam someone.
   const mailIpLimiter = new RateLimiter(60 * 60 * 1000, 6);
   const mailAddressLimiter = new RateLimiter(24 * 60 * 60 * 1000, 3);
@@ -89,7 +91,9 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
     const email = typeof body?.email === 'string' ? body.email.trim() : '';
     if (!room || !mod) throw new HttpError(400, 'invalid_request');
     if (!/^[^\s@<>",;:]{1,64}@[^\s@<>",;:]{1,255}$/.test(email)) throw new HttpError(400, 'invalid_email');
-    // Only the holder of the moderator key may have the links sent (they contain it).
+    // Only the holder of the moderator key may have the links sent (they contain it). This is
+    // also a way to test keys: same limit as /visio-api/room-info.
+    if (infoLimiter.hit(getClientIp(req))) throw new HttpError(429, 'rate_limited');
     if (!roomInfo(new URL(`http://x/?room=${encodeURIComponent(room)}&m=${encodeURIComponent(mod)}`))?.moderator) {
       throw new HttpError(400, 'invalid_request');
     }
@@ -171,6 +175,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
       return sendJson(res, 200, keys.newKey());
     }
     if (get && pathname === '/visio-api/room-info') {
+      if (infoLimiter.hit(getClientIp(req))) throw new HttpError(429, 'rate_limited');
       const info = roomInfo(url);
       if (!info) throw new HttpError(404, 'not_found');
       return sendJson(res, 200, info);

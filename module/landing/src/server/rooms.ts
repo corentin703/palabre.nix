@@ -16,8 +16,6 @@ import type { RoomKey } from '../shared/api.js';
 const TAG_LENGTH = 12;
 
 export interface RoomKeys {
-  /** Public tag of a key issued before moderator keys were derived from the tag (still accepted). */
-  tagOf(mod: string): string;
   /** Moderator key of the room whose tag is given: only the server can compute it. */
   modOf(tag: string): string;
   /** Does this key make its holder a moderator of the room with this tag? */
@@ -28,15 +26,13 @@ export interface RoomKeys {
 export function createRoomKeys(secret: string): RoomKeys {
   const hmac = (label: string, value: string): string =>
     crypto.createHmac('sha256', secret).update(`${label}|${value}`).digest('hex');
-  const tagOf = (mod: string): string => hmac('owner-tag', mod).slice(0, TAG_LENGTH);
   const modOf = (tag: string): string => hmac('mod-key', tag).slice(0, 32);
   const same = (a: string, b: string): boolean =>
     a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
   return {
-    tagOf,
     modOf,
-    matches: (tag, mod) => tag !== undefined && MOD_KEY_RE.test(mod) && (same(modOf(tag), mod) || tagOf(mod) === tag),
+    matches: (tag, mod) => tag !== undefined && MOD_KEY_RE.test(mod) && same(modOf(tag), mod),
     newKey() {
       const tag = crypto.randomBytes(TAG_LENGTH / 2).toString('hex');
       return { mod: modOf(tag), tag };

@@ -42,9 +42,8 @@ function resolveRoom(request: JoinRequest, keys: RoomKeys): RoomTarget {
       isModerator: keys.matches(link[2], modKey),
     };
   }
-  // A bare name (no tag, no key to tell us one): we draw the tag. A key without a tag is one
-  // issued by the previous version of the page.
-  const tag = modKey ? keys.tagOf(modKey) : keys.newKey().tag;
+  // A bare name (no tag): we draw one.
+  const tag = keys.newKey().tag;
   return { roomId: `${slugifyRoomId(typed, ROOM_NAME_MAX)}-${tag}`, title: typed, isModerator: true };
 }
 

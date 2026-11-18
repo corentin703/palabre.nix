@@ -59,8 +59,11 @@ export function createAdminHandler({ pnm, config, adminToken, keys }: AdminDeps)
   const tokenDigest = sha256(adminToken);
   const failures = new WindowCounter(LOGIN_WINDOW_MS);
 
+  // The cookie is not signed with the token itself: a key derived from it, so that a cookie
+  // (which the browser keeps) is no material to guess the token offline.
+  const sessionKey = crypto.createHmac('sha256', adminToken).update('admin-session-key').digest();
   const sign = (exp: string | number): string =>
-    crypto.createHmac('sha256', adminToken).update(`admin-session|${exp}`).digest('hex');
+    crypto.createHmac('sha256', sessionKey).update(`admin-session|${exp}`).digest('hex');
 
   function isAuthenticated(req: IncomingMessage): boolean {
     const [exp, signature] = (parseCookies(req.headers.cookie)[COOKIE_NAME] ?? '').split('.');
