@@ -77,7 +77,7 @@ export const fr = {
     ],
     stepsCommon: [
       "Votre navigateur sollicite alors l'autorisation d'employer la <b>caméra</b> et le <b>micro</b> : veuillez cliquer sur <b>« Autoriser »</b>. À défaut, nul ne pourra vous voir ni vous entendre.",
-      'Vous voilà en réunion. Les autres participants vous rejoindront au fur et à mesure.',
+      'Vous voilà en réunion, dans un <b>nouvel onglet</b> : cette page reste ouverte dans l\'onglet précédent. Les autres participants vous rejoindront au fur et à mesure.',
     ],
     whoModerates: 'Qui est modérateur ?',
     moderatorOfThisRoom:

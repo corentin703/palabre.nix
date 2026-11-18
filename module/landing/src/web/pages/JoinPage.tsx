@@ -135,6 +135,21 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
     }
   }
 
+  /**
+   * The meeting opens in a new tab. The tab is opened right away, on the person's click, so
+   * the popup blocker lets it through; it gets its address once the meeting is ready. If the
+   * browser refuses it, the meeting opens in this tab instead.
+   */
+  const meetingTab = useRef<Window | null>(null);
+  function openMeetingTab() {
+    meetingTab.current = window.open('', '_blank');
+    if (meetingTab.current) meetingTab.current.opener = null;
+  }
+  function closeMeetingTab() {
+    meetingTab.current?.close();
+    meetingTab.current = null;
+  }
+
   /** Opens the room (creating it if needed) and goes to the meeting. */
   async function enter(roomId: string, mod: string) {
     setStatus('connecting');
@@ -150,8 +165,17 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
         rememberMeeting({ slug: roomId, title: roomInput.trim() || roomId.replace(/-[0-9a-f]{12}$/, ''), mod, at: Date.now() });
       }
       saveName(name.trim());
-      location.assign(url);
+      if (meetingTab.current) {
+        meetingTab.current.location.href = url;
+        meetingTab.current = null;
+        // This page stays as it is, ready for another visit.
+        setAskMail(null);
+        setStatus('idle');
+      } else {
+        location.assign(url);
+      }
     } catch (failure) {
+      closeMeetingTab();
       // Back to the main form: the links, if they were sent, are not sent (nor asked) again.
       setAskMail(null);
       setError(errorMessage(t, failure));
@@ -162,6 +186,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
+    openMeetingTab();
     try {
       // Room key not received yet: we ask for it now rather than wait for the pause.
       let key = roomKey.key;
@@ -173,12 +198,14 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
       const roomId = preset ? preset.room : key ? `${roomKey.name}-${key.tag}` : '';
       // New room, and mails are possible: before entering, offer to get the links by email.
       if (config.mail && !preset && mod && roomId && mailedRoom !== roomId) {
+        closeMeetingTab();
         setStatus('idle');
         setAskMail({ roomId, mod });
         return;
       }
       await enter(roomId, mod);
     } catch (failure) {
+      closeMeetingTab();
       setError(errorMessage(t, failure));
       setStatus('idle');
     }
@@ -190,12 +217,14 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
     if (!askMail) return;
     setError('');
     setStatus('connecting');
+    openMeetingTab();
     try {
       await sendLinks({ room: askMail.roomId, mod: askMail.mod, email: mailAddress.trim(), locale });
       rememberEmail(mailAddress);
       setMailHistory(loadEmails());
     } catch (failure) {
       // The person stays on the question: they can fix the address, or enter without mail.
+      closeMeetingTab();
       setError(errorMessage(t, failure));
       setStatus('idle');
       return;
@@ -272,7 +301,10 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
             <button
               type="button"
               disabled={status !== 'idle'}
-              onClick={() => void enter(askMail.roomId, askMail.mod)}
+              onClick={() => {
+                openMeetingTab();
+                void enter(askMail.roomId, askMail.mod);
+              }}
             >
               {t.join.mailAskSkip}
             </button>

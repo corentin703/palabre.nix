@@ -75,7 +75,7 @@ export const en: Messages = {
     ],
     stepsCommon: [
       'Your browser then asks for permission to use the <b>camera</b> and the <b>microphone</b>: please click <b>“Allow”</b>. Otherwise nobody will be able to see or hear you.',
-      "You are in the meeting. The other participants will join you as they arrive.",
+      'You are in the meeting, in a <b>new tab</b>: this page stays open in the previous tab. The other participants will join you as they arrive.',
     ],
     whoModerates: 'Who is a moderator?',
     moderatorOfThisRoom:
