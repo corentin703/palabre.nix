@@ -44,10 +44,22 @@ export function Guide({ preset, moderator }: Props) {
 
       {preset ? (
         <>
-          <h3>{g.whoModerates}</h3>
-          <p>
-            <Rich text={moderator ? g.moderatorOfThisRoom : g.participantOfThisRoom} />
-          </p>
+          {moderator ? (
+            <>
+              <h3>{g.moderatorTitle}</h3>
+              <p>
+                <Rich text={g.moderatorOfThisRoom} />
+              </p>
+              <Help items={[g.moderatorInMeeting, g.moderatorLock, g.moderatorShare, g.moderatorKeep]} />
+            </>
+          ) : (
+            <>
+              <h3>{g.whoModerates}</h3>
+              <p>
+                <Rich text={g.participantOfThisRoom} />
+              </p>
+            </>
+          )}
         </>
       ) : (
         <>

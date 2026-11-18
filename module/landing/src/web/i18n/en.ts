@@ -79,7 +79,16 @@ export const en: Messages = {
     ],
     whoModerates: 'Who is a moderator?',
     moderatorOfThisRoom:
-      'You opened the <b>moderator link</b> of this room: you can mute a participant, remove them or end the meeting. Keep this link to get your rights back later.',
+      'You opened the <b>moderator link</b> of this room: you are its moderator, whatever the order of arrival.',
+    moderatorTitle: 'You are a moderator: what you can do',
+    moderatorInMeeting:
+      '<b>During the meeting</b>: mute a participant, remove them, or end the meeting for everyone.',
+    moderatorLock:
+      '<b>From this page</b>, in <b>“Room settings”</b>: close the room to new guests once everyone has arrived. A new guest opening the invitation link is then turned away, while you (and any other moderator) can still get in. The people already there stay, and you can reopen the room at any time.',
+    moderatorShare:
+      '<b>Under the form</b>: copy the invitation link for new participants, or the moderator link for someone you trust, or have both links sent to you by email.',
+    moderatorKeep:
+      '<b>Keep this link</b> (in your notes or by email): it is the only way to get your rights back, from any device.',
     participantOfThisRoom:
       'You are entering as a <b>regular participant</b>. Only the person who created the room, and those they gave their moderator link to, moderate it.',
     twoLinks: 'The two links and what they do',

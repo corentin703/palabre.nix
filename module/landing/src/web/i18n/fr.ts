@@ -81,7 +81,16 @@ export const fr = {
     ],
     whoModerates: 'Qui est modérateur ?',
     moderatorOfThisRoom:
-      'Vous avez ouvert le <b>lien de modérateur</b> de ce salon : vous pouvez couper le micro d\'un participant, l\'exclure ou clore la réunion. Conservez ce lien pour retrouver vos droits ultérieurement.',
+      'Vous avez ouvert le <b>lien de modérateur</b> de ce salon : vous en êtes modérateur, quel que soit l\'ordre d\'arrivée.',
+    moderatorTitle: 'Vous êtes modérateur : ce que vous pouvez faire',
+    moderatorInMeeting:
+      '<b>Pendant la réunion</b> : couper le micro d\'un participant, l\'exclure, ou clore la réunion pour tout le monde.',
+    moderatorLock:
+      '<b>Depuis cette page</b>, dans <b>« Paramètres du salon »</b> : fermer le salon aux nouveaux invités une fois tout le monde arrivé. Un nouvel invité qui ouvre le lien d\'invitation est alors refusé, alors que vous (et tout autre modérateur) pouvez toujours entrer. Les personnes présentes restent, et vous pouvez rouvrir le salon à tout moment.',
+    moderatorShare:
+      '<b>Sous le formulaire</b> : copier le lien d\'invitation pour de nouveaux participants, ou le lien de modérateur pour une personne de confiance, ou vous envoyer les deux liens par courriel.',
+    moderatorKeep:
+      '<b>Conservez ce lien</b> (dans vos notes ou par courriel) : il est le seul moyen de retrouver vos droits, depuis n\'importe quel appareil.',
     participantOfThisRoom:
       'Vous entrez en <b>simple participant</b>. Seule la personne qui a créé le salon, ainsi que celles à qui elle a confié son lien de modérateur, en assure la modération.',
     twoLinks: 'Les deux liens et leur rôle',
