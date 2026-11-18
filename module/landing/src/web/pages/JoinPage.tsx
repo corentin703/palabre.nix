@@ -336,11 +336,10 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
                 <span className="note">{t.join.lockHelp}</span>
               </span>
             </label>
-            {shown && shareLinks(shown)}
           </details>
         )}
 
-        {shown && !(preset && moderator) && shareLinks(shown)}
+        {shown && shareLinks(shown)}
         <History
           items={history}
           onClear={() => {

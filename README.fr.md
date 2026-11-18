@@ -137,7 +137,7 @@ verrouillées est conservée dans `services.palabre.landing.stateDir` (par défa
 
 Un modérateur peut le faire depuis la page du salon : ouvrir le lien modérateur
 (`/r/<salon>?m=<clé>`), puis
-ouvrir **Paramètres du salon** : on y trouve les liens, leur envoi par courriel, et **Fermer le salon aux nouveaux invités**.
+ouvrir **Paramètres du salon** et cocher **Fermer le salon aux nouveaux invités**.
 
 ## Langues
 

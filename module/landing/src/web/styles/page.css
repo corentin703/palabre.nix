@@ -107,7 +107,6 @@ details.settings { margin: 1.5rem 0 0; border: 1px solid var(--line); border-rad
 .settings .option { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.4rem 0 0.9rem; cursor: pointer; }
 .settings .option input { width: 1.25rem; height: 1.25rem; margin-top: 0.15rem; flex: none; }
 .settings .option .note { display: block; margin: 0.25rem 0 0; }
-.settings .share { border-top: 1px solid var(--line); margin: 0; padding: 1.1rem 0 0.9rem; }
 
 .history ul { list-style: none; margin: 0; padding: 0; }
 .history li { display: flex; gap: 1rem; justify-content: space-between; align-items: baseline; padding: 0.6rem 0; border-bottom: 1px solid var(--line); }
