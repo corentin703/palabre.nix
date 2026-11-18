@@ -18,6 +18,9 @@ export const fr = {
     leadNew: 'Veuillez indiquer l’intitulé du salon (et, si vous le souhaitez, votre prénom), puis cliquer sur « Créer les liens ».',
     leadExisting: 'Veuillez renseigner votre prénom, puis valider d’un clic sur le bouton principal.',
     moderatorBanner: 'Vous rejoignez ce salon en tant que modérateur.',
+    keepLinksTitle: 'Ne perdez pas vos liens',
+    keepLinksText:
+      'Le site ne retient rien sur vous : sans votre lien de modérateur, vous ne pourrez plus modérer ce salon. Recevez dès maintenant les deux liens par courriel, c’est le plus sûr.',
     settings: 'Paramètres du salon',
     locked: 'Verrouillé',
     lockLabel: 'Fermer le salon aux nouveaux invités',

@@ -39,7 +39,7 @@ export function ShareLinks({ roomId, mod, mail = false, onMailSent }: Props) {
 }
 
 /** "Send me the links": two separate mails, one with the invitation link, one with the moderator link. */
-function EmailLinks({ roomId, mod, onSent }: { roomId: string; mod: string; onSent?: () => void }) {
+export function EmailLinks({ roomId, mod, onSent }: { roomId: string; mod: string; onSent?: () => void }) {
   const { t, locale } = useI18n();
   const [history, setHistory] = useState(loadEmails);
   const [email, setEmail] = useState(() => loadEmails()[0] ?? '');

@@ -7,6 +7,7 @@ const ROOMS_KEY = 'visio:rooms';
 const HISTORY_KEY = 'visio:history';
 const NAME_KEY = 'visio:name';
 const EMAILS_KEY = 'visio:emails';
+const MAILED_KEY = 'visio:mailed';
 const HISTORY_SIZE = 10;
 
 function read<T>(key: string, fallback: T): T {
@@ -24,6 +25,17 @@ function write(key: string, value: unknown): void {
   } catch {
     // See above.
   }
+}
+
+// // --- Rooms whose links were sent by email from this device ------------------------------------
+
+export function wasMailed(roomId: string): boolean {
+  return read<string[]>(MAILED_KEY, []).includes(roomId);
+}
+
+export function markMailed(roomId: string): void {
+  const rooms = read<string[]>(MAILED_KEY, []).filter((id) => id !== roomId);
+  write(MAILED_KEY, [roomId, ...rooms].slice(0, 50));
 }
 
 // // --- Keys of the rooms created or opened as a moderator on this device ------------------------

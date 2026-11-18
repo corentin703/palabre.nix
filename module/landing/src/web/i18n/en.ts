@@ -16,6 +16,9 @@ export const en: Messages = {
     leadNew: 'Please enter a name for the room (and, if you wish, your first name), then click “Create the links”.',
     leadExisting: 'Please enter your first name, then confirm with the main button.',
     moderatorBanner: 'You are joining this room as a moderator.',
+    keepLinksTitle: 'Do not lose your links',
+    keepLinksText:
+      'The site remembers nothing about you: without your moderator link you can no longer moderate this room. Have both links sent to you by email now, it is the safest way.',
     settings: 'Room settings',
     locked: 'Locked',
     lockLabel: 'Close the room to new guests',

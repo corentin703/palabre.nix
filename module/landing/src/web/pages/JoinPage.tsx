@@ -6,7 +6,7 @@ import { ApiFailure, getRoomInfo, getRoomKey, joinRoom, lockRoom } from '../api'
 import { Guide } from '../components/Guide';
 import { InstallBanner } from '../components/InstallBanner';
 import { History } from '../components/History';
-import { ShareLinks } from '../components/ShareLinks';
+import { EmailLinks, ShareLinks } from '../components/ShareLinks';
 import { LocaleSwitcher, useI18n } from '../i18n';
 import { errorMessage } from '../i18n/errors';
 import {
@@ -16,7 +16,9 @@ import {
   loadName,
   rememberMeeting,
   saveName,
+  markMailed,
   saveRoomKey,
+  wasMailed,
 } from '../room-storage';
 import '../styles/page.css';
 
@@ -101,6 +103,8 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
   const [error, setError] = useState('');
   const [moderator, setModerator] = useState(false);
   const [locked, setLocked] = useState(false);
+  /** Links not yet sent from this device when the page opened: they are asked for, all along the visit. */
+  const [askToMail] = useState(() => preset !== null && !wasMailed(preset.room));
   const roomKey = useRoomKey(roomInput, !preset);
 
   // Moderator link of an existing room: the server checks the key, and we keep it so the
@@ -121,9 +125,12 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
   // to the moderator's own page, where they are).
   const shown = preset ? { roomId: preset.room, mod: moderator ? preset.mod : '' } : null;
 
+  /** A moderator is urged to have the links sent by email: the moderator link cannot be found again otherwise. */
+  const nudgeMail = config.mail && moderator && askToMail;
+
   /** The room's links, and their sending by email. */
   const shareLinks = (room: { roomId: string; mod: string }) => (
-    <ShareLinks roomId={room.roomId} mod={room.mod} mail={config.mail} />
+    <ShareLinks roomId={room.roomId} mod={room.mod} mail={config.mail && !nudgeMail} />
   );
 
   /** A moderator closes the room to new guests, or opens it again. */
@@ -230,6 +237,13 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
         )}
         {config.pwa && <InstallBanner />}
         {preset && moderator && <p className="banner">{t.join.moderatorBanner}</p>}
+        {preset && nudgeMail && (
+          <section className="callout">
+            <h2>{t.join.keepLinksTitle}</h2>
+            <p>{t.join.keepLinksText}</p>
+            <EmailLinks roomId={preset.room} mod={preset.mod} onSent={() => markMailed(preset.room)} />
+          </section>
+        )}
 
         <form id="join-form" onSubmit={submit}>
           {preset ? (
