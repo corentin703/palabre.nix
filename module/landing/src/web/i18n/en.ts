@@ -16,6 +16,12 @@ export const en: Messages = {
     leadNew: 'Please enter a name for the room and your first name, then confirm.',
     leadExisting: 'Please enter your first name, then confirm with the main button.',
     moderatorBanner: 'You are joining this room as a moderator.',
+    lock: 'Lock the room',
+    unlock: 'Unlock the room',
+    lockedNote:
+      'Room locked: no new guest can join it. Moderators can still get in, and the people already there stay.',
+    lockHelp:
+      'Lock the room once everyone has arrived: a new guest opening the invitation link is turned away. You can unlock it at any time.',
     room: 'Room',
     roomName: 'Room name',
     roomPlaceholder: 'for example: team-meeting',
@@ -148,6 +154,8 @@ export const en: Messages = {
     rate_limited: 'Too many attempts; please wait a few minutes.',
     invalid_room: 'Invalid room name (letters, digits and hyphens only).',
     too_many_rooms: 'The maximum number of simultaneous meetings is reached; please try again in a few minutes.',
+    not_moderator: 'Only a moderator of the room can do this.',
+    save_failed: 'Saving failed; please try again.',
     room_closed: 'This meeting is closed to new participants; please contact its organizer.',
     join_failed: 'The room cannot be joined right now; please try again later.',
     bad_token: 'Wrong token.',

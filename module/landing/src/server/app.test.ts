@@ -208,7 +208,7 @@ describe('GET /visio-api/room-info', () => {
   it('checks that the key is the room’s key', async () => {
     const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
     const info = async (m: string) => (await fetch(`${base}/visio-api/room-info?room=demo-${tag}&m=${m}`)).json();
-    expect(await info(mod)).toEqual({ room: `demo-${tag}`, label: 'demo', moderator: true });
+    expect(await info(mod)).toEqual({ room: `demo-${tag}`, label: 'demo', moderator: true, closed: false });
     expect(await info('0'.repeat(32))).toMatchObject({ moderator: false });
     expect(await info('')).toMatchObject({ moderator: false });
   });
@@ -280,6 +280,41 @@ describe('POST /visio-api/send-links', () => {
     const { mod, tag } = await key();
     const response = await postJson('/visio-api/send-links', { room: `salon-${tag}`, mod, email: 'a@b.fr' });
     expect([response.status, await response.json()]).toEqual([502, { code: 'mail_failed' }]);
+  });
+});
+
+describe('POST /visio-api/lock', () => {
+  const key = async () => (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
+  const info = async (room: string, mod = '') =>
+    (await (await fetch(`${base}/visio-api/room-info?room=${room}&m=${mod}`)).json()) as { closed: boolean; moderator: boolean };
+
+  it('lets a moderator close the room to new guests and open it again', async () => {
+    const { mod, tag } = await key();
+    const room = `salon-${tag}`;
+    expect((await info(room)).closed).toBe(false);
+
+    const closed = await postJson('/visio-api/lock', { room, mod, closed: true });
+    expect([closed.status, await closed.json()]).toEqual([200, { closed: true }]);
+    expect(await info(room, mod)).toEqual({ room, label: 'salon', moderator: true, closed: true });
+
+    const guest = await postJson('/visio-api/join', { room, name: 'x', locale: 'fr' });
+    expect([guest.status, await guest.json()]).toEqual([403, { code: 'room_closed' }]);
+    expect((await postJson('/visio-api/join', { room, name: 'x', mod, locale: 'fr' })).status).toBe(200);
+
+    expect(await (await postJson('/visio-api/lock', { room, mod, closed: false })).json()).toEqual({ closed: false });
+    expect((await postJson('/visio-api/join', { room, name: 'x', locale: 'fr' })).status).toBe(200);
+  });
+
+  it('refuses anyone without the key of that room', async () => {
+    const { mod, tag } = await key();
+    const other = await key();
+    const room = `salon-${tag}`;
+    for (const given of ['', other.mod, 'x'.repeat(32)]) {
+      const response = await postJson('/visio-api/lock', { room, mod: given, closed: true });
+      expect([response.status, await response.json()]).toEqual([403, { code: 'not_moderator' }]);
+    }
+    expect((await info(room, mod)).closed).toBe(false);
+    expect((await postJson('/visio-api/lock', { room, mod })).status).toBe(400);
   });
 });
 

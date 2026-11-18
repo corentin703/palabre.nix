@@ -18,6 +18,12 @@ export const fr = {
     leadNew: 'Veuillez indiquer l’intitulé du salon ainsi que votre prénom, puis valider.',
     leadExisting: 'Veuillez renseigner votre prénom, puis valider d’un clic sur le bouton principal.',
     moderatorBanner: 'Vous rejoignez ce salon en tant que modérateur.',
+    lock: 'Verrouiller le salon',
+    unlock: 'Déverrouiller le salon',
+    lockedNote:
+      'Salon verrouillé : plus aucun nouvel invité ne peut le rejoindre. Les modérateurs peuvent toujours entrer, et les personnes déjà présentes restent.',
+    lockHelp:
+      'Verrouillez le salon une fois tout le monde arrivé : un nouvel invité qui ouvre le lien d’invitation est refusé. Vous pouvez le déverrouiller à tout moment.',
     room: 'Salon',
     roomName: 'Intitulé du salon',
     roomPlaceholder: 'par exemple : reunion-bureau',
@@ -151,6 +157,8 @@ export const fr = {
     invalid_room: 'Intitulé de salon invalide (lettres, chiffres et tirets uniquement).',
     too_many_rooms:
       'Le nombre maximal de réunions simultanées est atteint ; veuillez réessayer dans quelques minutes.',
+    not_moderator: 'Seul un modérateur du salon peut faire cela.',
+    save_failed: "L'enregistrement a échoué ; veuillez réessayer.",
     room_closed: 'Cette réunion est fermée aux nouveaux participants ; veuillez vous adresser à son organisateur.',
     join_failed:
       "Il n'est pas possible de rejoindre le salon pour le moment ; veuillez réessayer ultérieurement.",

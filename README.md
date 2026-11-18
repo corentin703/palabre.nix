@@ -133,6 +133,9 @@ link, or the administrator joining or observing from `/admin`) still get in, and
 in the meeting stays; **Unlock** reverses it. The list of locked rooms is kept in
 `services.palabre.landing.stateDir` (default `<stateDir>-landing`).
 
+A moderator can do the same from the room's page: open the moderator link (`/r/<room>?m=<key>`), then
+**Lock the room** / **Unlock the room**.
+
 ## Languages
 
 The landing page and the `/admin` panel exist in French and English. Each person gets the language

@@ -12,6 +12,8 @@ export type ErrorCode =
   | 'invalid_room'
   | 'join_failed'
   | 'room_closed'
+  | 'not_moderator'
+  | 'save_failed'
   | 'too_many_rooms'
   | 'bad_token'
   | 'too_many_attempts'
@@ -57,6 +59,16 @@ export interface RoomInfo {
   label: string;
   /** The given key is the key of this room. */
   moderator: boolean;
+  /** The room is closed to new guests. */
+  closed: boolean;
+}
+
+/** A moderator closing the room to new guests, or opening it again. */
+export interface LockRequest {
+  room: string;
+  /** Moderator key of the room. */
+  mod: string;
+  closed: boolean;
 }
 
 export interface JoinRequest {

@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { IncomingMessage, RequestListener, ServerResponse } from 'node:http';
-import type { JoinRequest, RoomInfo, RuntimeConfig, SendLinksRequest } from '../shared/api.js';
+import type { JoinRequest, LockRequest, RoomInfo, RuntimeConfig, SendLinksRequest } from '../shared/api.js';
 import { isLocale } from '../shared/locales.js';
 import { ROOM_ID_RE, slugifyRoomId } from '../shared/slug.js';
 import { createAdminHandler } from './admin.js';
@@ -119,13 +119,33 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
     sendJson(res, 200, { ok: true });
   }
 
+  /** A moderator closes the room to new guests, or opens it again: only the holder of its key. */
+  async function lockApi(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    if (infoLimiter.hit(getClientIp(req))) throw new HttpError(429, 'rate_limited');
+    const body = (await readJson(req, 2000)) as Partial<Record<keyof LockRequest, unknown>> | null;
+    const room = typeof body?.room === 'string' ? slugifyRoomId(body.room) : '';
+    const mod = typeof body?.mod === 'string' ? body.mod : '';
+    if (!room || typeof body?.closed !== 'boolean') throw new HttpError(400, 'invalid_request');
+    if (!roomInfo(new URL(`http://x/?room=${encodeURIComponent(room)}&m=${encodeURIComponent(mod)}`))?.moderator) {
+      throw new HttpError(403, 'not_moderator');
+    }
+    try {
+      closed.set(room, body.closed);
+    } catch (err) {
+      console.error('saving the closed rooms failed:', err);
+      throw new HttpError(500, 'save_failed');
+    }
+    console.log(`moderator ${body.closed ? 'closed' : 'reopened'} room ${room} to new guests (from ${getClientIp(req)})`);
+    sendJson(res, 200, { closed: body.closed });
+  }
+
   /** Room of a /r/<room>?m=<key> link: the key's tag must be the room's tag. */
   function roomInfo(url: URL): RoomInfo | null {
     const room = slugifyRoomId(url.searchParams.get('room') ?? '');
     if (!room) return null;
     const mod = url.searchParams.get('m') ?? '';
     const tag = ROOM_ID_RE.exec(room)?.[2];
-    return { room, label: roomLabel(room), moderator: keys.matches(tag, mod) };
+    return { room, label: roomLabel(room), moderator: keys.matches(tag, mod), closed: closed.has(room) };
   }
 
   async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -183,6 +203,7 @@ export function createApp({ config, pnm, indexHtml, webDir, logo, customCss, pwa
       return sendJson(res, 200, info);
     }
     if (req.method === 'POST' && pathname === '/visio-api/join') return joinApi(req, res);
+    if (req.method === 'POST' && pathname === '/visio-api/lock') return lockApi(req, res);
     if (req.method === 'POST' && pathname === '/visio-api/send-links') return sendLinksApi(req, res);
 
     // Pages: the home page, and a room (shareable link or moderator link).

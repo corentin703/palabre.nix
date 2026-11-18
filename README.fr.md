@@ -135,6 +135,9 @@ modérateurs (lien modérateur, ou l'administrateur qui rejoint ou observe depui
 toujours, et les personnes déjà présentes restent ; **Déverrouiller** annule. La liste des salles
 verrouillées est conservée dans `services.palabre.landing.stateDir` (par défaut `<stateDir>-landing`).
 
+Un modérateur peut le faire depuis la page du salon : ouvrir le lien modérateur
+(`/r/<salon>?m=<clé>`), puis **Verrouiller le salon** / **Déverrouiller le salon**.
+
 ## Langues
 
 La page d'accueil et le panneau `/admin` existent en français et en anglais. Chaque personne a la

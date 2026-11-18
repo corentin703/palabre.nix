@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { RoomKey, RuntimeConfig } from '../../shared/api';
 import { ROOM_ID_RE, ROOM_NAME_MAX, slugifyRoomId } from '../../shared/slug';
-import { getRoomInfo, getRoomKey, joinRoom, sendLinks } from '../api';
+import { getRoomInfo, getRoomKey, joinRoom, lockRoom, sendLinks } from '../api';
 import { Guide } from '../components/Guide';
 import { InstallBanner } from '../components/InstallBanner';
 import { EmailHistory } from '../components/EmailHistory';
@@ -95,6 +95,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
   /** Room whose links were already sent (by the question or by the form under the links): no need to ask again. */
   const [mailedRoom, setMailedRoom] = useState('');
   const [moderator, setModerator] = useState(false);
+  const [locked, setLocked] = useState(false);
   const roomKey = useRoomKey(roomInput, !preset);
 
   // Moderator link of an existing room: the server checks the key, and we keep it so the
@@ -104,6 +105,7 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
     void getRoomInfo(preset.room, preset.mod)
       .then((info) => {
         setModerator(info.moderator);
+        setLocked(info.closed);
         const parts = ROOM_ID_RE.exec(info.room);
         if (info.moderator && parts?.[1] && parts[2]) saveRoomKey(parts[1], { mod: preset.mod, tag: parts[2] });
       })
@@ -116,6 +118,17 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
     : roomKey.key
       ? { roomId: `${roomKey.name}-${roomKey.key.tag}`, mod: roomKey.key.mod }
       : null;
+
+  /** A moderator closes the room to new guests, or opens it again. */
+  async function toggleLock() {
+    if (!preset) return;
+    setError('');
+    try {
+      setLocked((await lockRoom({ room: preset.room, mod: preset.mod, closed: !locked })).closed);
+    } catch (failure) {
+      setError(errorMessage(t, failure));
+    }
+  }
 
   /** Opens the room (creating it if needed) and goes to the meeting. */
   async function enter(roomId: string, mod: string) {
@@ -215,6 +228,14 @@ export default function JoinPage({ config }: { config: RuntimeConfig }) {
         )}
         {config.pwa && <InstallBanner />}
         {preset && moderator && <p className="banner">{t.join.moderatorBanner}</p>}
+        {preset && moderator && (
+          <div className="lock">
+            <p className="note">{locked ? t.join.lockedNote : t.join.lockHelp}</p>
+            <button type="button" onClick={() => void toggleLock()}>
+              {locked ? t.join.unlock : t.join.lock}
+            </button>
+          </div>
+        )}
 
         {askMail && (
           <form id="mail-form" onSubmit={sendThenEnter}>
