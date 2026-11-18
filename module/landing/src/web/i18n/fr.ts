@@ -149,6 +149,8 @@ export const fr = {
     invalid_request: 'Requête invalide.',
     rate_limited: 'Le nombre de tentatives autorisé est dépassé ; veuillez patienter quelques minutes.',
     invalid_room: 'Intitulé de salon invalide (lettres, chiffres et tirets uniquement).',
+    too_many_rooms:
+      'Le nombre maximal de réunions simultanées est atteint ; veuillez réessayer dans quelques minutes.',
     room_closed: 'Cette réunion est fermée aux nouveaux participants ; veuillez vous adresser à son organisateur.',
     join_failed:
       "Il n'est pas possible de rejoindre le salon pour le moment ; veuillez réessayer ultérieurement.",

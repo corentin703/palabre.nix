@@ -12,6 +12,7 @@ export type ErrorCode =
   | 'invalid_room'
   | 'join_failed'
   | 'room_closed'
+  | 'too_many_rooms'
   | 'bad_token'
   | 'too_many_attempts'
   | 'unauthorized'

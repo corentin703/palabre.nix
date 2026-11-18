@@ -120,6 +120,7 @@ in
         # Value kept out of the environment file: it is not secret, and may
         # contain characters this format does not like.
         LANDING_BRAND_NAME = lcfg.brandName;
+        MAX_ROOMS = toString lcfg.maxRooms;
       }
       // lib.optionalAttrs lcfg.pwa.enable (
         {

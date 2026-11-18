@@ -121,6 +121,12 @@ ou ajoutez `https://palabre.cachix.org` et la clé publique `palabre.cachix.org-
 déjà pour ses propres commandes). Mainteneurs : créez le cache sur cachix.org et ajoutez son
 jeton d'authentification aux secrets du dépôt sous le nom `CACHIX_AUTH_TOKEN`.
 
+## Limiter les réunions ouvertes
+
+`services.palabre.landing.maxRooms` (20 par défaut) plafonne les réunions ouvertes en même temps :
+au-delà, personne ne peut en démarrer une nouvelle (la page l'indique), mais on peut toujours
+rejoindre celles qui sont ouvertes.
+
 ## Verrouiller une salle
 
 Dans `/admin`, **Verrouiller** ferme une salle aux nouveaux invités : le lien d'invitation répond

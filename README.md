@@ -120,6 +120,11 @@ to `nix.settings.substituters` and `nix.settings.trusted-public-keys` (this flak
 does it for its own commands). Maintainers: create the cache on cachix.org and add its
 auth token to the repository's secrets as `CACHIX_AUTH_TOKEN`.
 
+## Limiting open meetings
+
+`services.palabre.landing.maxRooms` (default 20) caps the meetings open at the same time: past it,
+nobody can start a new one (the page says so), while people can still join the ones that are open.
+
 ## Locking a room
 
 In `/admin`, **Lock** closes a room to new guests: the invitation link then answers that the

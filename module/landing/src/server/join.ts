@@ -2,7 +2,13 @@ import { MOD_KEY_RE, ROOM_ID_RE, ROOM_NAME_MAX, slugifyRoomId } from '../shared/
 import type { JoinRequest, JoinResponse } from '../shared/api.js';
 import type { Config } from './config.js';
 import { HttpError } from './http.js';
-import { CreateRoomReqSchema, IsRoomActiveReqSchema, createJoinUrl, createRequest } from './plugnmeet.js';
+import {
+  CreateRoomReqSchema,
+  IsRoomActiveReqSchema,
+  createJoinUrl,
+  createRequest,
+  isNoRoomMessage,
+} from './plugnmeet.js';
 import type { PnmApi } from './plugnmeet.js';
 import type { ClosedRooms } from './closed-rooms.js';
 import type { RoomKeys } from './rooms.js';
@@ -62,6 +68,12 @@ export async function joinRoom(request: JoinRequest, { pnm, config, keys, closed
     if (!active.status) throw new Error(active.msg || 'isRoomActive failed');
 
     if (!active.isActive) {
+      // Every room uses resources (a LiveKit room): past the limit, no new one is started.
+      // Whoever joins one that is already open is not affected. Checked just before creating,
+      // not atomically: a burst can overshoot by a few rooms.
+      const open = await pnm.getActiveRoomsInfo();
+      if (!open.status && !isNoRoomMessage(open.msg)) throw new Error(open.msg || 'getActiveRoomsInfo failed');
+      if (open.status && open.rooms.length >= config.maxRooms) throw new HttpError(503, 'too_many_rooms');
       const created = await pnm.createRoom(
         createRequest(CreateRoomReqSchema, {
           roomId,
@@ -102,6 +114,7 @@ export async function joinRoom(request: JoinRequest, { pnm, config, keys, closed
     const url = await createJoinUrl(pnm, config, roomId, { name: displayName, isAdmin: isModerator }, request.locale);
     return { url };
   } catch (err) {
+    if (err instanceof HttpError) throw err;
     console.error('join failed:', err);
     throw new HttpError(502, 'join_failed');
   }

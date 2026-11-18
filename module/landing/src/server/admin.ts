@@ -6,7 +6,7 @@ import { getClientIp, readJson, sendError, sendJson } from './http.js';
 import { isLocale } from '../shared/locales.js';
 import type { Locale } from '../shared/locales.js';
 import { adminName } from './messages.js';
-import { FetchPastRoomsReqSchema, RoomEndReqSchema, createJoinUrl, createRequest } from './plugnmeet.js';
+import { FetchPastRoomsReqSchema, RoomEndReqSchema, createJoinUrl, createRequest, isNoRoomMessage } from './plugnmeet.js';
 import type { PnmApi } from './plugnmeet.js';
 import { WindowCounter } from './window-counter.js';
 import type { ClosedRooms } from './closed-rooms.js';
@@ -110,10 +110,7 @@ export function createAdminHandler({ pnm, config, adminToken, keys, closed }: Ad
           return undefined;
         }),
     ]);
-    // PlugNMeet answers status=false + "no active room found" when there is simply no
-    // room: that is not an outage.
-    const isEmpty = (res: { msg: string }): boolean => /no .*(room|record).*found/i.test(res.msg);
-    if (!activeRes.status && !isEmpty(activeRes)) {
+    if (!activeRes.status && !isNoRoomMessage(activeRes.msg)) {
       throw new Error(activeRes.msg || 'getActiveRoomsInfo failed');
     }
 

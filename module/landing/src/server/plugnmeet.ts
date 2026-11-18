@@ -26,6 +26,12 @@ export type PnmApi = Pick<
   | 'endRoom'
 >;
 
+/**
+ * PlugNMeet answers status=false + "no active room found" when there is simply no room:
+ * that is not an outage.
+ */
+export const isNoRoomMessage = (message: string): boolean => /no .*(room|record).*found/i.test(message);
+
 export function createPnm(config: Config): PnmApi {
   return new PlugNmeet(config.plugnmeetApiUrl, config.plugnmeetApiKey, config.plugnmeetSecret);
 }

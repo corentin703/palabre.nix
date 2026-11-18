@@ -296,6 +296,15 @@ in
     };
 
     landing = {
+      maxRooms = mkOption {
+        type = types.ints.positive;
+        default = 20;
+        description = ''
+          Most meetings open at the same time. Past it, nobody can start a new one (people can
+          still join the ones that are open). Each meeting uses resources, and anyone with the
+          address can start one.
+        '';
+      };
       stateDir = mkOption {
         type = types.str;
         default = "${config.services.palabre.stateDir}-landing";

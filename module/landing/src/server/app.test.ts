@@ -155,6 +155,31 @@ describe('POST /visio-api/join', () => {
     expect(calls.tokens.map((t) => t.isAdmin)).toEqual([true, false, false]);
   });
 
+  it('starts no new room past the maximum, but still lets people into an open one', async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await start({ MAX_ROOMS: '2' });
+    const rooms = (n: number) =>
+      ({ status: true, rooms: Array.from({ length: n }, (_, i) => ({ roomInfo: { roomId: `r${i}` } })) }) as never;
+
+    vi.mocked(pnm.getActiveRoomsInfo).mockResolvedValueOnce(rooms(2));
+    const refused = await postJson('/visio-api/join', { room: 'nouvelle', name: 'x', locale: 'fr' });
+    expect([refused.status, await refused.json()]).toEqual([503, { code: 'too_many_rooms' }]);
+    expect(calls.created).toEqual([]);
+
+    vi.mocked(pnm.getActiveRoomsInfo).mockResolvedValueOnce(rooms(1));
+    expect((await postJson('/visio-api/join', { room: 'nouvelle', name: 'x', locale: 'fr' })).status).toBe(200);
+
+    // PlugNMeet's "no active room" answer is zero rooms, not a failure.
+    vi.mocked(pnm.getActiveRoomsInfo).mockResolvedValueOnce({ status: false, msg: 'no active room found' } as never);
+    expect((await postJson('/visio-api/join', { room: 'autre', name: 'x', locale: 'fr' })).status).toBe(200);
+
+    // An open room is joined without counting anything.
+    vi.mocked(pnm.isRoomActive).mockResolvedValueOnce({ status: true, isActive: true } as never);
+    vi.mocked(pnm.getActiveRoomsInfo).mockClear();
+    expect((await postJson('/visio-api/join', { room: 'ouverte-0123456789ab', name: 'x', locale: 'fr' })).status).toBe(200);
+    expect(pnm.getActiveRoomsInfo).not.toHaveBeenCalled();
+  });
+
   it('refuses an unusable name and a malformed request, with a code to translate', async () => {
     const invalid = await postJson('/visio-api/join', { room: '!!!', name: 'x', mod: '', locale: 'fr' });
     expect([invalid.status, await invalid.json()]).toEqual([400, { code: 'invalid_room' }]);

@@ -76,3 +76,13 @@ describe('moderator key secret', () => {
     expect(loadConfig({ ...base, ROOM_KEY_SECRET: 'r' }).roomKeySecret).toBe('r');
   });
 });
+
+describe('MAX_ROOMS', () => {
+  const base = { PLUGNMEET_HOST: 'https://v.example', PLUGNMEET_API_KEY: 'k', PLUGNMEET_SECRET: 's' };
+
+  it('defaults to 20 and takes a positive integer', () => {
+    expect(loadConfig(base).maxRooms).toBe(20);
+    expect(loadConfig({ ...base, MAX_ROOMS: '5' }).maxRooms).toBe(5);
+    for (const bad of ['0', '-1', '2.5', 'beaucoup']) expect(() => loadConfig({ ...base, MAX_ROOMS: bad })).toThrow(ConfigError);
+  });
+});

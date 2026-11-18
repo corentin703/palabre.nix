@@ -147,6 +147,7 @@ export const en: Messages = {
     invalid_request: 'Invalid request.',
     rate_limited: 'Too many attempts; please wait a few minutes.',
     invalid_room: 'Invalid room name (letters, digits and hyphens only).',
+    too_many_rooms: 'The maximum number of simultaneous meetings is reached; please try again in a few minutes.',
     room_closed: 'This meeting is closed to new participants; please contact its organizer.',
     join_failed: 'The room cannot be joined right now; please try again later.',
     bad_token: 'Wrong token.',

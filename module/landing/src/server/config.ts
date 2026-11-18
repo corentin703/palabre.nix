@@ -23,6 +23,8 @@ export interface Config {
   roomKeySecret: string;
   /** Where the closed rooms are remembered across restarts; absent: only until the next restart. */
   closedRoomsFile: string | undefined;
+  /** Most rooms open at the same time: past it, nobody can start a new one (MAX_ROOMS). */
+  maxRooms: number;
   /** Absent: the /admin panel is disabled. */
   adminToken: string | undefined;
   defaultLocale: Locale;
@@ -50,6 +52,8 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   if (env['LANDING_PWA'] === '1' && !env['LANDING_LOGO_FILE']) {
     throw new ConfigError('LANDING_PWA=1 requires LANDING_LOGO_FILE: the app icons are made from it');
   }
+  const maxRooms = env['MAX_ROOMS'] === undefined || env['MAX_ROOMS'] === '' ? 20 : Number(env['MAX_ROOMS']);
+  if (!Number.isInteger(maxRooms) || maxRooms < 1) throw new ConfigError('MAX_ROOMS must be a positive integer');
   const backgroundColor = env['LANDING_BACKGROUND_COLOR'] || '#ffffff';
   // Handed to ImageMagick: only a hexadecimal color is accepted.
   if (!/^#[0-9a-f]{3,8}$/i.test(backgroundColor)) {
@@ -88,6 +92,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     plugnmeetApiKey,
     plugnmeetSecret,
     roomKeySecret: env['ROOM_KEY_SECRET'] || plugnmeetSecret,
+    maxRooms,
     closedRoomsFile: env['CLOSED_ROOMS_FILE'] || undefined,
     adminToken: env['ADMIN_TOKEN'] || undefined,
     defaultLocale: isLocale(env['LANDING_DEFAULT_LOCALE']) ? env['LANDING_DEFAULT_LOCALE'] : 'fr',
