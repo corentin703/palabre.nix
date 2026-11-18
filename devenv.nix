@@ -1,7 +1,7 @@
 # The whole stack on your machine: `devenv up`.
 #
 #   http://localhost:8080        the public address (like the vhost of a real deployment):
-#                                landing page, /admin (token: admin-token), and the meetings
+#                                landing page, /admin (token: palabre-dev-admin-token-0123456789), and the meetings
 #   http://localhost:8025        mailbox: the mails sent by the "email me the links" form
 #
 # Redis, MariaDB, NATS and LiveKit run natively; PlugNMeet runs in Docker (its image, pinned by
@@ -182,7 +182,7 @@ in
         export PLUGNMEET_API_URL=http://127.0.0.1:${toString ports.plugnmeet}
         export PLUGNMEET_API_KEY=${apiKey} PLUGNMEET_SECRET=${apiSecret}
         export ROOM_KEY_SECRET=dev-room-key-secret CLOSED_ROOMS_FILE="${config.devenv.state}/closed-rooms.json"
-        export ADMIN_TOKEN=admin-token LANDING_BRAND_NAME="Palabre (dev)"
+        export ADMIN_TOKEN=palabre-dev-admin-token-0123456789 LANDING_BRAND_NAME="Palabre (dev)"
         export MAIL_HOST=127.0.0.1 MAIL_PORT=${toString ports.smtp} MAIL_SECURITY=none MAIL_FROM=visio@palabre.test
         exec node --watch-path=dist dist/server/main.js
       '';
@@ -191,6 +191,6 @@ in
   };
 
   enterShell = ''
-    echo "devenv up  →  http://localhost:${toString ports.public} (admin: /admin, token admin-token), mailbox http://localhost:${toString ports.mailbox}"
+    echo "devenv up  →  http://localhost:${toString ports.public} (admin: /admin, token palabre-dev-admin-token-0123456789), mailbox http://localhost:${toString ports.mailbox}"
   '';
 }

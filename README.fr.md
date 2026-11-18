@@ -258,7 +258,7 @@ Après une modification de `package-lock.json`, mettez à jour `npmDepsHash` dan
 nécessaire pour PlugNMeet ; le premier démarrage télécharge son image et son client web) :
 
 - <http://localhost:8080> : l'adresse publique, comme le vhost d'un vrai déploiement : la page
-  d'accueil, les réunions, et <http://localhost:8080/admin> (jeton `admin-token`) ;
+  d'accueil, les réunions, et <http://localhost:8080/admin> (jeton `palabre-dev-admin-token-0123456789`) ;
 - <http://localhost:8025> : la boîte aux lettres, avec les courriels envoyés par la page d'accueil.
 
 Redis, MariaDB, NATS et LiveKit tournent nativement ; PlugNMeet tourne dans Docker, avec l'image

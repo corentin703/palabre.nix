@@ -39,7 +39,7 @@ const env = {
   PLUGNMEET_HOST: 'https://visio.example',
   PLUGNMEET_API_KEY: 'k',
   PLUGNMEET_SECRET: 'secret',
-  ADMIN_TOKEN: 'admin-token',
+  ADMIN_TOKEN: 'palabre-dev-admin-token-0123456789',
   LANDING_BRAND_NAME: 'Mon organisation',
 };
 
@@ -293,7 +293,7 @@ describe('administration panel', () => {
 
   it('exchanges the token for a session cookie, which opens the API', async () => {
     expect(await (await login('mauvais')).json()).toEqual({ code: 'bad_token' });
-    const ok = await login('admin-token');
+    const ok = await login('palabre-dev-admin-token-0123456789');
     expect(ok.status).toBe(200);
     const cookie = ok.headers.get('set-cookie')?.split(';')[0] ?? '';
     expect(cookie).toMatch(/^admin_session=\d+\./);
@@ -306,7 +306,7 @@ describe('administration panel', () => {
   });
 
   it('generates new links: a fresh key whose tag matches the room identifier', async () => {
-    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    const cookie = (await login('palabre-dev-admin-token-0123456789')).headers.get('set-cookie')?.split(';')[0] ?? '';
     const ask = (name: string) => postJson('/admin/api/links', { name }, { cookie });
     const response = await ask('Réunion équipe');
     expect(response.status).toBe(200);
@@ -319,7 +319,7 @@ describe('administration panel', () => {
   });
 
   it('gives the moderator key of each room, to build its link', async () => {
-    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    const cookie = (await login('palabre-dev-admin-token-0123456789')).headers.get('set-cookie')?.split(';')[0] ?? '';
     const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
     vi.mocked(pnm.getActiveRoomsInfo).mockResolvedValueOnce({
       status: true,
@@ -332,7 +332,7 @@ describe('administration panel', () => {
   });
 
   it('joins a room as an invisible observer: PlugNMeet’s hidden identity, not a moderator, everything locked', async () => {
-    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    const cookie = (await login('palabre-dev-admin-token-0123456789')).headers.get('set-cookie')?.split(';')[0] ?? '';
     const response = await postJson('/admin/api/rooms/observe', { roomId: 'salon-0123456789ab', locale: 'fr' }, { cookie });
     expect([response.status, await response.json()]).toEqual([200, { url: 'https://visio.example/?access_token=jeton&lng=fr-FR' }]);
     const observer = calls.userInfos[0];
@@ -343,7 +343,7 @@ describe('administration panel', () => {
   });
 
   it('closes a room to new guests, but not to its moderators nor to the administrator', async () => {
-    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    const cookie = (await login('palabre-dev-admin-token-0123456789')).headers.get('set-cookie')?.split(';')[0] ?? '';
     const { mod, tag } = (await (await fetch(`${base}/visio-api/room-key`)).json()) as { mod: string; tag: string };
     const room = `salon-${tag}`;
     const join = (body: Record<string, string>) => postJson('/visio-api/join', { room, name: 'x', locale: 'fr', ...body });
@@ -377,7 +377,7 @@ describe('administration panel', () => {
     const file = path.join(dir, 'closed.json');
     await new Promise<void>((resolve) => server.close(() => resolve()));
     await start({ CLOSED_ROOMS_FILE: file });
-    const cookie = (await login('admin-token')).headers.get('set-cookie')?.split(';')[0] ?? '';
+    const cookie = (await login('palabre-dev-admin-token-0123456789')).headers.get('set-cookie')?.split(';')[0] ?? '';
     await postJson('/admin/api/rooms/close', { roomId: 'salon-0123456789ab' }, { cookie });
     expect(JSON.parse(fs.readFileSync(file, 'utf8'))).toEqual(['salon-0123456789ab']);
 
@@ -402,7 +402,7 @@ describe('administration panel', () => {
   it('refuses a request that changes something without being JSON from this same site', async () => {
     const wrongType = await fetch(`${base}/admin/login`, { method: 'POST', body: '{}' });
     expect(wrongType.status).toBe(400);
-    const wrongOrigin = await login('admin-token', { Origin: 'https://autre.example' });
+    const wrongOrigin = await login('palabre-dev-admin-token-0123456789', { Origin: 'https://autre.example' });
     expect(wrongOrigin.status).toBe(400);
   });
 

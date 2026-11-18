@@ -223,7 +223,7 @@ in
       };
       adminTokenFile = mkOption {
         type = secretFile;
-        description = "File containing the token of the /admin panel.";
+        description = "File containing the token of the /admin panel: at least 32 characters (e.g. `openssl rand -hex 32`), or the landing page refuses to start.";
       };
       roomKeySecretFile = mkOption {
         type = types.nullOr secretFile;

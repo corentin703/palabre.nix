@@ -77,6 +77,17 @@ describe('moderator key secret', () => {
   });
 });
 
+describe('ADMIN_TOKEN', () => {
+  const base = { PLUGNMEET_HOST: 'https://v.example', PLUGNMEET_API_KEY: 'k', PLUGNMEET_SECRET: 's' };
+
+  it('needs at least 32 characters, or is absent (the panel is then disabled)', () => {
+    expect(() => loadConfig({ ...base, ADMIN_TOKEN: 'a'.repeat(31) })).toThrow(ConfigError);
+    expect(loadConfig({ ...base, ADMIN_TOKEN: 'a'.repeat(32) }).adminToken).toBe('a'.repeat(32));
+    expect(loadConfig({ ...base, ADMIN_TOKEN: '' }).adminToken).toBeUndefined();
+    expect(loadConfig(base).adminToken).toBeUndefined();
+  });
+});
+
 describe('MAX_ROOMS', () => {
   const base = { PLUGNMEET_HOST: 'https://v.example', PLUGNMEET_API_KEY: 'k', PLUGNMEET_SECRET: 's' };
 

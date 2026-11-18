@@ -40,6 +40,9 @@ export interface Config {
   mail: SmtpConfig | undefined;
 }
 
+/** Shortest administration token accepted. */
+export const ADMIN_TOKEN_MIN_LENGTH = 32;
+
 export class ConfigError extends Error {}
 
 export function loadConfig(env: NodeJS.ProcessEnv): Config {
@@ -48,6 +51,12 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   const plugnmeetSecret = env['PLUGNMEET_SECRET'];
   if (!plugnmeetHost || !plugnmeetApiKey || !plugnmeetSecret) {
     throw new ConfigError('PLUGNMEET_HOST, PLUGNMEET_API_KEY and PLUGNMEET_SECRET are required');
+  }
+  // The token is the only thing between the Internet and the administration: a short one would
+  // be a weak one.
+  const adminToken = env['ADMIN_TOKEN'] || undefined;
+  if (adminToken !== undefined && adminToken.length < ADMIN_TOKEN_MIN_LENGTH) {
+    throw new ConfigError(`ADMIN_TOKEN must be at least ${ADMIN_TOKEN_MIN_LENGTH} characters (e.g. openssl rand -hex 32)`);
   }
   if (env['LANDING_PWA'] === '1' && !env['LANDING_LOGO_FILE']) {
     throw new ConfigError('LANDING_PWA=1 requires LANDING_LOGO_FILE: the app icons are made from it');
@@ -94,7 +103,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     roomKeySecret: env['ROOM_KEY_SECRET'] || plugnmeetSecret,
     maxRooms,
     closedRoomsFile: env['CLOSED_ROOMS_FILE'] || undefined,
-    adminToken: env['ADMIN_TOKEN'] || undefined,
+    adminToken,
     defaultLocale: isLocale(env['LANDING_DEFAULT_LOCALE']) ? env['LANDING_DEFAULT_LOCALE'] : 'fr',
     brandName: env['LANDING_BRAND_NAME'] || 'Visioconférence',
     themeColor: env['LANDING_THEME_COLOR'] || '#1f3a5f',

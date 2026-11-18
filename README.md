@@ -253,7 +253,7 @@ After changing `package-lock.json`, update `npmDepsHash` in `module/landing/pack
 needed for PlugNMeet; the first start downloads its image and its web client):
 
 - <http://localhost:8080>: the public address, as a real deployment's vhost: the landing page, the
-  meetings, and <http://localhost:8080/admin> (token `admin-token`);
+  meetings, and <http://localhost:8080/admin> (token `palabre-dev-admin-token-0123456789`);
 - <http://localhost:8025>: the mailbox, with the mails the landing page sends.
 
 Redis, MariaDB, NATS and LiveKit run natively; PlugNMeet runs in Docker, from the image pinned in

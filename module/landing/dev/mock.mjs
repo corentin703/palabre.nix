@@ -1,7 +1,7 @@
 // Dev server: the real landing server (built in dist/), with a fake PlugNMeet and a fake mail
 // relay, to try the page, /admin and the mails without any infrastructure.
 //
-//   landing + admin   http://localhost:3000        (/admin: token "admin-token")
+//   landing + admin   http://localhost:3000        (/admin: token "palabre-dev-admin-token-0123456789")
 //   mailbox           http://localhost:8025        (what the "email me the links" form sends)
 //
 // "Entering" a room leads to a fake meeting page (/?access_token=...) showing the room, the
@@ -65,7 +65,7 @@ const config = loadConfig({
   PLUGNMEET_HOST: `http://localhost:${PORT}`,
   PLUGNMEET_API_KEY: 'dev',
   PLUGNMEET_SECRET: 'dev-secret',
-  ADMIN_TOKEN: 'admin-token',
+  ADMIN_TOKEN: 'palabre-dev-admin-token-0123456789',
   LANDING_BRAND_NAME: 'Palabre (dev)',
   MAIL_HOST: '127.0.0.1',
   MAIL_PORT: String(SMTP_PORT),
@@ -102,5 +102,5 @@ http
     return app(req, res);
   })
   .listen(config.port, config.bindHost, () => {
-    console.log(`landing   http://localhost:${config.port}\nadmin     http://localhost:${config.port}/admin  (token: admin-token)\nmailbox   http://localhost:${MAILBOX_PORT}`);
+    console.log(`landing   http://localhost:${config.port}\nadmin     http://localhost:${config.port}/admin  (token: palabre-dev-admin-token-0123456789)\nmailbox   http://localhost:${MAILBOX_PORT}`);
   });
